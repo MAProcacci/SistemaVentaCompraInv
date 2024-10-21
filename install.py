@@ -47,6 +47,11 @@ class InstallerApp:
             self.root.update_idletasks()
             shutil.copy("VentaCompraInv.exe", install_path)
 
+            # Copia taza_impuesto.txt
+            self.progress["value"] = 30
+            self.root.update_idletasks()
+            shutil.copy("taza_impuesto.txt", install_path)
+
             # Crear el directorio SumatraPDF_Installer
             os.makedirs(sumatra_installer_path, exist_ok=True)
 

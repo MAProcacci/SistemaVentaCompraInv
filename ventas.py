@@ -12,10 +12,32 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet
 import platform
 
-TAX_RATE = 0.16
 FACTURA_DIR = 'facturas'
 ERROR_DIR = 'errores'
 COLOR_SNACKBAR = "white"
+COLOR_ERROR = "red"
+
+
+def leer_taza_interes(main_app_instance):
+    try:
+        # Abrir el archivo en modo lectura
+        with open('taza_impuesto.txt', 'r') as archivo:
+            # Leer el contenido del archivo
+            contenido = archivo.read().strip()
+
+            # Intentar convertir el contenido a un número flotante
+            taza_interes = float(contenido)
+
+            return taza_interes
+    except FileNotFoundError:
+        main_app_instance.mostrar_mensaje("Error: El archivo 'taza_impuesto.txt' no fue encontrado.", COLOR_ERROR)
+        main_app_instance.guardar_error("Error: El archivo 'taza_impuesto.txt' no fue encontrado.")
+        return None
+    except ValueError:
+        main_app_instance.mostrar_mensaje("Error: El contenido del archivo 'taza_impuesto.txt' no es un número válido.", COLOR_ERROR)
+        main_app_instance.guardar_error("Error: El contenido del archivo 'taza_impuesto.txt' no es un número válido.")
+        return None
+
 
 class VentasApp:
     def __init__(self, page: ft.Page, main_menu_callback):
@@ -359,6 +381,8 @@ class VentasApp:
         os.makedirs(ruta_facturas, exist_ok=True)
         ruta_factura = os.path.join(ruta_facturas, f'factura_{factura_id}.pdf')
 
+        TAX_RATE = leer_taza_interes(self)
+
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT nombre, telefono, email FROM Clientes WHERE id=?", (cliente_id,))
@@ -428,7 +452,7 @@ class VentasApp:
         total_con_impuesto = total_venta + impuesto
         data = [
             ["Total de la venta:", f"${total_venta:.2f}"],
-            ["Impuesto (16%):", f"${impuesto:.2f}"],
+            [f"Impuesto ({TAX_RATE * 100:.2f}%):", f"${impuesto:.2f}"],
             ["Total con impuesto:", f"${total_con_impuesto:.2f}"]
         ]
         t = Table(data, colWidths=[350, 110])
@@ -497,6 +521,7 @@ class VentasApp:
 
         with open(ruta_archivo, 'w') as archivo:
             archivo.write(mensaje_error)
+
 
 def ventas_app(page: ft.Page, main_menu_callback):
     app = VentasApp(page, main_menu_callback)
