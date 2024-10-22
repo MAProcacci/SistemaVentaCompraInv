@@ -60,8 +60,16 @@ class InstallerApp:
             self.root.update_idletasks()
             shutil.copy("SumatraPDF-3.5.2-64-install.exe", sumatra_installer_path)
 
-            # Crear acceso directo en el escritorio
-            self.create_shortcut(os.path.join(install_path, "VentaCompraInv.exe"))
+            # Copiar find_backup_db.exe
+            self.progress["value"] = 70
+            self.root.update_idletasks()
+            shutil.copy("find_backup_db.exe", install_path)
+
+            # Crear acceso directo en el escritorio para 'find_backup_db.py'
+            self.create_shortcut(os.path.join(install_path, "find_backup_db.exe"), "Respaldo y Restauración DB.lnk")
+
+            # Crear acceso directo en el escritorio para el sistema 'VentaCompraInv'
+            self.create_shortcut(os.path.join(install_path, "VentaCompraInv.exe"), "Sistema VentaCompraInv.lnk")
 
             self.progress["value"] = 100
             self.root.update_idletasks()
@@ -72,9 +80,9 @@ class InstallerApp:
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error durante la instalación: {str(e)}")
 
-    def create_shortcut(self, target_path):
+    def create_shortcut(self, target_path, name):
         desktop = winshell.desktop()
-        shortcut_path = os.path.join(desktop, "Sistema VentaCompraInv.lnk")
+        shortcut_path = os.path.join(desktop, name)
         icon_path = "ruta_del_icono.ico"  # Reemplaza con la ruta del icono que deseas usar
 
         shell = win32com.client.Dispatch("WScript.Shell")

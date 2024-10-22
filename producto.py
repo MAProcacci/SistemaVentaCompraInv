@@ -151,6 +151,8 @@ class ProductoApp:
         descripcion_field = ft.TextField(label="Descripción", value=producto[2] if producto else "")
         precio_field = ft.TextField(label="Precio", value=str(producto[3]) if producto else "")
         stock_field = ft.TextField(label="Stock", value=str(producto[4]) if producto else "")
+        # La siguiente linea lo que hace es desabilitar el campo para no ser modificado
+        #stock_field = ft.TextField(label="Stock", disabled=True, value=str(producto[4]) if producto else "")
 
         def guardar_producto(_):
             try:
