@@ -401,7 +401,7 @@ class VentasApp:
         title_style = styles['Heading1']
         normal_style = styles['Normal']
 
-        elements.append(Paragraph("Inversiones Torino, S.A.", title_style))
+        elements.append(Paragraph("Inversiones Torino, C.A.", title_style))
         elements.append(Spacer(1, 12))
 
         factura_info = [

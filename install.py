@@ -10,6 +10,7 @@ import win32com.client
 # Como crear el EXE con nuitka:
 # nuitka --windows-console-mode=disable --enable-plugin=tk-inter --standalone --onefile --output-dir=dist install.py
 
+# Función para la instalación del Sistema de Ventas e Inventario.
 class InstallerApp:
     def __init__(self, root):
         self.root = root
@@ -29,10 +30,12 @@ class InstallerApp:
         self.progress = ttk.Progressbar(root, orient="horizontal", length=300, mode="determinate")
         self.progress.pack(pady=10)
 
+    # Obtener todas las unidades disponibles entre 'C', 'D' y 'E'.
     def get_available_drives(self):
-        drives = [f"{d}:\\" for d in "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{d}:\\")]
+        drives = [f"{d}:\\" for d in "CDE" if os.path.exists(f"{d}:\\")]
         return drives
 
+    # Función para la instalación.
     def install(self):
         selected_drive = self.drive_var.get()
         install_path = os.path.join(selected_drive, "VCI")
@@ -52,6 +55,11 @@ class InstallerApp:
             self.root.update_idletasks()
             shutil.copy("taza_impuesto.txt", install_path)
 
+            # Copiar Inc_Sis_Venta.exe
+            self.progress["value"] = 20
+            self.root.update_idletasks()
+            shutil.copy("Inc_Sis_Venta.exe", install_path)
+
             # Crear el directorio SumatraPDF_Installer
             os.makedirs(sumatra_installer_path, exist_ok=True)
 
@@ -69,7 +77,7 @@ class InstallerApp:
             self.create_shortcut(os.path.join(install_path, "find_backup_db.exe"), "Respaldo y Restauración DB.lnk")
 
             # Crear acceso directo en el escritorio para el sistema 'VentaCompraInv'
-            self.create_shortcut(os.path.join(install_path, "VentaCompraInv.exe"), "Sistema VentaCompraInv.lnk")
+            self.create_shortcut(os.path.join(install_path, "Inc_Sis_Venta.exe"), "Sistema VentaCompraInv.lnk")
 
             self.progress["value"] = 100
             self.root.update_idletasks()
@@ -80,6 +88,7 @@ class InstallerApp:
         except Exception as e:
             messagebox.showerror("Error", f"Ocurrió un error durante la instalación: {str(e)}")
 
+    # Crear acceso directo en el escritorio
     def create_shortcut(self, target_path, name):
         desktop = winshell.desktop()
         shortcut_path = os.path.join(desktop, name)
@@ -92,6 +101,7 @@ class InstallerApp:
         shortcut.IconLocation = icon_path
         shortcut.save()
 
+# Ejecutar la aplicación
 if __name__ == "__main__":
     root = tk.Tk()
     app = InstallerApp(root)

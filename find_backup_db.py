@@ -11,6 +11,7 @@ import queue
 # Como crear el EXE con nuitka:
 # nuitka --windows-console-mode=disable --enable-plugin=tk-inter --standalone --onefile --output-dir=dist find_backup_db.py
 
+# Función para crear, buscar y restaurar la base de datos de backup
 class BackupApp:
     def __init__(self, root):
         self.root = root
@@ -38,11 +39,13 @@ class BackupApp:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.root.after(100, self.check_messages)
 
+    # Función para cerrar la aplicación
     def on_closing(self):
         self.is_running = False
         self.stop_search.set()
         self.root.destroy()
 
+    # Función para comprobar los mensajes
     def check_messages(self):
         if not self.is_running:
             return
@@ -65,6 +68,7 @@ class BackupApp:
             if self.is_running:
                 self.root.after(100, self.check_messages)
 
+    # Función para buscar la base de datos
     def buscar_base_de_datos(self, nombre_bd, ruta_inicial):
         try:
             for root, dirs, files in os.walk(ruta_inicial):
@@ -81,6 +85,7 @@ class BackupApp:
             self.message_queue.put(("showerror", "Error", f"Error al buscar la base de datos: {str(e)}"))
             return None
 
+    # Función para respaldar la base de datos
     def respaldar_base_de_datos(self, ruta_bd, ruta_respaldo):
         try:
             nombre_bd = os.path.basename(ruta_bd)
@@ -99,6 +104,7 @@ class BackupApp:
             self.message_queue.put(("showerror", "Error", f"Error al respaldar la base de datos: {str(e)}"))
             return None
 
+    # Función para restaurar la base de datos
     def restaurar_base_de_datos(self, ruta_respaldo):
         try:
             backups = [f for f in os.listdir(ruta_respaldo) if f.startswith("inventario.db_") and f.endswith(".bak")]
@@ -124,6 +130,7 @@ class BackupApp:
             self.message_queue.put(("showerror", "Error", f"Error al restaurar la base de datos: {str(e)}"))
             return None
 
+    # Función para iniciar el proceso de respaldo
     def iniciar_respaldo(self):
         self.button_backup.config(state=tk.DISABLED)
         self.button_restore.config(state=tk.DISABLED)
@@ -136,6 +143,7 @@ class BackupApp:
         ruta_inicial = "C:\\"
         ruta_respaldo = "C:\\VCI\\respaldos_db"
 
+        # Función para realizar la tarea de respaldo
         def tarea_respaldo():
             ruta_bd = self.buscar_base_de_datos(nombre_bd, ruta_inicial)
             if ruta_bd and not self.stop_search.is_set():
@@ -165,6 +173,7 @@ class BackupApp:
 
         threading.Thread(target=tarea_respaldo, daemon=True).start()
 
+    # Función para iniciar el proceso de restauración
     def iniciar_restaurar(self):
         self.button_backup.config(state=tk.DISABLED)
         self.button_restore.config(state=tk.DISABLED)
@@ -175,6 +184,7 @@ class BackupApp:
 
         ruta_respaldo = "C:\\VCI\\respaldos_db"
 
+        # Función para realizar la tarea de restauración
         def tarea_restaurar():
             ruta_restaurada = self.restaurar_base_de_datos(ruta_respaldo)
             if ruta_restaurada:
@@ -190,6 +200,7 @@ class BackupApp:
 
         threading.Thread(target=tarea_restaurar, daemon=True).start()
 
+    # Función para finalizar la busqueda
     def finalizar_busqueda(self):
         self.stop_search.set()
         self.progress["value"] = 100
@@ -200,11 +211,13 @@ class BackupApp:
         self.button_backup.destroy()  # Eliminar el botón "Iniciar Respaldo"
         self.button_restore.destroy()  # Eliminar el botón "Iniciar Restauración"
 
+    # Función para terminar la aplicación
     def terminar_aplicacion(self):
         self.is_running = False
         self.stop_search.set()
         self.root.destroy()
 
+# Ejecutar la aplicación
 if __name__ == "__main__":
     root = tk.Tk()
     app = BackupApp(root)
