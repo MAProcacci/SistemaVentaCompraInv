@@ -49,7 +49,8 @@ class ProductoApp:
 
         def filtrar_productos(e):
             filtro = filtro_field.value.lower()
-            productos_filtrados = [producto for producto in productos if filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
+            productos_filtrados = [producto for producto in productos if
+                                   filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
             actualizar_lista_productos(productos_filtrados)
 
         def actualizar_lista_productos(productos_filtrados):
@@ -91,8 +92,10 @@ class ProductoApp:
         return ft.ElevatedButton(
             content=ft.Column(
                 [
-                    ft.Text(f"Nombre: {producto[1]}", weight=ft.FontWeight.BOLD, color=BLUE_COLOR),
-                    ft.Text(f"Stock: {producto[4]}", color=BLUE_COLOR),
+                    ft.Row([ft.Text(f"Nombre: ", color=BLUE_COLOR),
+                            ft.Text(f"{producto[1]}", weight=ft.FontWeight.BOLD, color="white")]),
+                    ft.Row([ft.Text(f"Stock: ", color=BLUE_COLOR),
+                            ft.Text(f"{producto[4]}", weight=ft.FontWeight.BOLD, color="white")]),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=5,

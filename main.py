@@ -126,6 +126,8 @@ class MainApp:
                     ft.Divider(height=20, color="transparent"),
                     ft.ElevatedButton("Cambio de Usuario", icon=ft.icons.SWAP_HORIZ, on_click=self.cambiar_usuario),
                 ], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Row([ft.ElevatedButton("Salir", on_click=lambda _: self.page.window.close())],
+                       alignment=ft.MainAxisAlignment.CENTER),
             ], alignment=ft.MainAxisAlignment.CENTER)
         )
         self.page.update()

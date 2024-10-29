@@ -40,7 +40,18 @@ class DevolucionesApp:
                 factura_id, cliente_nombre = factura
                 facturas_list.controls.append(
                     ft.ElevatedButton(
-                        f"Factura ID: {factura_id} - Cliente: {cliente_nombre}",
+                        content=ft.Column([
+                            ft.Row([
+                                ft.Text(f"Factura ID: ", color="blue"),
+                                ft.Text(f"{factura_id}", weight=ft.FontWeight.BOLD, color="white"),
+                                ft.Text(f"Cliente: ", color="blue"),
+                                ft.Text(f"{cliente_nombre}", weight=ft.FontWeight.BOLD, color="white")
+                            ], alignment=ft.MainAxisAlignment.CENTER),
+                        ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                        ),
+
                         on_click=seleccionar_factura,
                         data=factura_id
                     )
@@ -61,6 +72,7 @@ class DevolucionesApp:
             ft.Container(
                 content=facturas_list,
                 height=400,
+                width=600,
                 border=ft.border.all(1, ft.colors.OUTLINE),
                 border_radius=ft.border_radius.all(10),
             ),
@@ -101,14 +113,20 @@ class DevolucionesApp:
                 producto_nombre, precio = producto_info
 
                 producto_row = ft.Row([
-                    ft.Text(f"ID: {producto_id}, Nombre: {producto_nombre}, Cantidad Vendida: {cantidad_vendida}, Precio: ${precio:.2f}"),
+                    ft.Text(f"Nombre: ", color="blue"),
+                    ft.Text(f"{producto_nombre}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Cantidad Vendida: ", color="blue"),
+                    ft.Text(f"{cantidad_vendida}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Precio: $", color="blue"),
+                    ft.Text(f"{precio:.2f}", weight=ft.FontWeight.BOLD, color="white"),
                     ft.TextField(label="Cantidad a Devolver", value=str(cantidad_vendida), width=100),
                     ft.ElevatedButton(
-                        "Agregar Devolución",
+                        "Agregar al carrito",
                         on_click=agregar_devolucion,
                         data=(producto_id, producto_nombre, cantidad_vendida, precio)
                     )
                 ])
+
                 factura_content.controls.append(producto_row)
 
         self.page.add(

@@ -39,7 +39,17 @@ class ComprasApp:
             for proveedor in proveedores_filtrados:
                 proveedor_list.controls.append(
                     ft.ElevatedButton(
-                        f"ID: {proveedor[0]}, Nombre: {proveedor[1]}, Teléfono: {proveedor[2]}",
+                        content=ft.Column([
+                            ft.Row([
+                                ft.Text(f"Nombre: ", color="blue"),
+                                ft.Text(f"{proveedor[1]}", weight=ft.FontWeight.BOLD, color="white"),
+                                ft.Text(f"Teléfono: ", color="blue"),
+                                ft.Text(f"{proveedor[2]}", weight=ft.FontWeight.BOLD, color="white")
+                            ], alignment=ft.MainAxisAlignment.CENTER),
+                        ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                        ),
                         on_click=seleccionar_proveedor,
                         data=(proveedor[0], proveedor[1])
                     )
@@ -60,6 +70,7 @@ class ComprasApp:
             ft.Container(
                 content=proveedor_list,
                 height=400,
+                width=600,
                 border=ft.border.all(1, ft.colors.OUTLINE),
                 border_radius=ft.border_radius.all(10),
             ),
@@ -109,16 +120,22 @@ class ComprasApp:
             for producto in productos_filtrados:
                 ultimo_precio_costo = producto[5] if producto[5] is not None else "N/A"
                 producto_row = ft.Row([
-                    ft.Text(
-                        f"ID: {producto[0]}, Nombre: {producto[1]}, Stock: {producto[4]}, Último Precio Costo: ${ultimo_precio_costo}"),
-                    ft.TextField(label="Cantidad", value="1", width=100),
-                    ft.TextField(label="Precio Costo", value=str(ultimo_precio_costo), width=100),
-                    ft.ElevatedButton(
-                        "Agregar al carrito",
-                        on_click=agregar_al_carrito,
-                        data=producto
-                    )
+                        ft.Text(f"Nombre: ", color="blue"),
+                        ft.Text(f"{producto[1]}", weight=ft.FontWeight.BOLD, color="white"),
+                        ft.Text(f"Stock: ", color="blue"),
+                        ft.Text(f"{producto[4]}", weight=ft.FontWeight.BOLD, color="white"),
+                        ft.Text(f"Último Precio Costo: $", color="blue"),
+                        ft.Text(f"{float(ultimo_precio_costo) if ultimo_precio_costo != 'N/A' else 'N/A'}",
+                                weight=ft.FontWeight.BOLD, color="white"),
+                        ft.TextField(label="Cantidad", value="1", width=100),
+                        ft.TextField(label="Precio Costo", value=str(ultimo_precio_costo), width=100),
+                        ft.ElevatedButton(
+                            "Agregar al carrito",
+                            on_click=agregar_al_carrito,
+                            data=(producto[0], producto[1], producto[3])
+                        )
                 ])
+
                 producto_list.controls.append(producto_row)
             self.page.update()
 

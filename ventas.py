@@ -69,7 +69,17 @@ class VentasApp:
             for cliente in clientes_filtrados:
                 cliente_list.controls.append(
                     ft.ElevatedButton(
-                        f"ID: {cliente[0]}, Nombre: {cliente[1]}, Teléfono: {cliente[2]}",
+                        content=ft.Column([
+                            ft.Row([
+                                ft.Text(f"Nombre: ", color="blue"),
+                                ft.Text(f"{cliente[1]}", weight=ft.FontWeight.BOLD, color="white"),
+                                ft.Text(f"Teléfono: ", color="blue"),
+                                ft.Text(f"{cliente[2]}", weight=ft.FontWeight.BOLD, color="white")
+                            ], alignment=ft.MainAxisAlignment.CENTER),
+                        ],
+                            alignment=ft.MainAxisAlignment.CENTER,
+                            horizontal_alignment=ft.CrossAxisAlignment.CENTER
+                        ),
                         on_click=seleccionar_cliente,
                         data=(cliente[0], cliente[1])
                     )
@@ -90,6 +100,7 @@ class VentasApp:
             ft.Container(
                 content=cliente_list,
                 height=400,
+                width=600,
                 border=ft.border.all(1, ft.colors.OUTLINE),
                 border_radius=ft.border_radius.all(10),
             ),
@@ -140,7 +151,12 @@ class VentasApp:
             producto_list.controls.clear()
             for producto in productos_filtrados:
                 producto_row = ft.Row([
-                    ft.Text(f"ID: {producto[0]}, Nombre: {producto[1]}, Stock: {producto[4]}, Precio: ${producto[3]}"),
+                    ft.Text(f"Nombre: ", color="blue"),
+                    ft.Text(f"{producto[1]}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Stock: ", color="blue"),
+                    ft.Text(f"{producto[4]}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Precio: $", color="blue"),
+                    ft.Text(f"{producto[3]:.2f}", weight=ft.FontWeight.BOLD, color="white"),
                     ft.TextField(label="Cantidad", value="1", width=100),
                     ft.ElevatedButton(
                         "Agregar al carrito",

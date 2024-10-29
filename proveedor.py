@@ -91,8 +91,10 @@ class ProveedorApp:
         return ft.ElevatedButton(
             content=ft.Column(
                 [
-                    ft.Text(f"Nombre: {proveedor[1]}", weight=ft.FontWeight.BOLD, color=BLUE_COLOR),
-                    ft.Text(f"Teléfono: {proveedor[2]}", color=BLUE_COLOR),
+                    ft.Row([ft.Text(f"Nombre: ", color=BLUE_COLOR),
+                            ft.Text(f"{proveedor[1]}", weight=ft.FontWeight.BOLD, color="white")]),
+                    ft.Row([ft.Text(f"Teléfono: ", color=BLUE_COLOR),
+                            ft.Text(f"{proveedor[2]}", weight=ft.FontWeight.BOLD, color="white")]),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=5,

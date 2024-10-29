@@ -91,8 +91,10 @@ class ClienteApp:
         return ft.ElevatedButton(
             content=ft.Column(
                 [
-                    ft.Text(f"Nombre: {cliente[1]}", weight=ft.FontWeight.BOLD, color=BLUE_COLOR),
-                    ft.Text(f"Teléfono: {cliente[2]}", color=BLUE_COLOR),
+                    ft.Row([ft.Text(f"Nombre: ", color=BLUE_COLOR),
+                            ft.Text(f"{cliente[1]}", weight=ft.FontWeight.BOLD, color="white")]),
+                    ft.Row([ft.Text(f"Teléfono: ", color=BLUE_COLOR),
+                            ft.Text(f"{cliente[2]}", weight=ft.FontWeight.BOLD, color="white")]),
                 ],
                 alignment=ft.MainAxisAlignment.CENTER,
                 spacing=5,
