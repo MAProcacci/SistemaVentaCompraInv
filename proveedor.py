@@ -58,7 +58,10 @@ class ProveedorApp:
                 lista_proveedores.controls.append(self._crear_boton_proveedor(proveedor))
             self.page.update()
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_proveedores)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_proveedores,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
 
         # Inicialmente, mostrar todos los proveedores
         actualizar_lista_proveedores(proveedores)

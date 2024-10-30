@@ -59,7 +59,10 @@ class ProductoApp:
                 lista_productos.controls.append(self._crear_boton_producto(producto))
             self.page.update()
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_productos)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_productos,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
 
         # Inicialmente, mostrar todos los productos
         actualizar_lista_productos(productos)

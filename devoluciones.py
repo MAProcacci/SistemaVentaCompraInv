@@ -61,7 +61,11 @@ class DevolucionesApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Factura", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_facturas)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_facturas,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
+
         facturas_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=True)
 
         # Inicialmente, mostrar todas las facturas

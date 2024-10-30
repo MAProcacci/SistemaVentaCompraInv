@@ -89,7 +89,11 @@ class VentasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Cliente", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_clientes)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_clientes,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
+
         cliente_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
         # Inicialmente, mostrar todos los clientes
@@ -170,7 +174,11 @@ class VentasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Productos", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_productos)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_productos,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
+
         producto_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
         # Inicialmente, mostrar todos los productos

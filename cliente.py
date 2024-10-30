@@ -58,7 +58,10 @@ class ClienteApp:
                 lista_clientes.controls.append(self._crear_boton_cliente(cliente))
             self.page.update()
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_clientes)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
+                                    on_change=filtrar_clientes,
+                                    width=500,
+                                    border_color=ft.colors.OUTLINE)
 
         # Inicialmente, mostrar todos los clientes
         actualizar_lista_clientes(clientes)
