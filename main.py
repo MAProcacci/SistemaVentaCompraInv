@@ -86,8 +86,8 @@ class MainApp:
                 self.mostrar_mensaje("Acceso denegado - Usuario y/o Password no autorizado", COLOR_ERROR)
                 self.page.update()
 
-        usuario_field = ft.TextField(label="Usuario")
-        password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True)
+        usuario_field = ft.TextField(label="Usuario", border_color=ft.colors.OUTLINE)
+        password_field = ft.TextField(label="Contraseña", password=True, can_reveal_password=True, border_color=ft.colors.OUTLINE)
         error_message = ft.Text("Acceso denegado - Usuario y/o Password no autorizado", color=COLOR_ERROR, visible=False)
 
         self.page.add(

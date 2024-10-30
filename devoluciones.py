@@ -4,13 +4,12 @@ from typing import List, Tuple, Optional
 from database import create_connection
 from models import Venta, Producto, Devolucion
 import datetime
+from libreria import BaseApp, FormField
 
-COLOR_SNACKBAR = "white"
 
-class DevolucionesApp:
+class DevolucionesApp(BaseApp):
     def __init__(self, page: ft.Page, main_menu_callback):
-        self.page = page
-        self.main_menu_callback = main_menu_callback
+        super().__init__(page, main_menu_callback)
         self.factura_seleccionada: Optional[str] = None
         self.productos_a_devolver: List[Tuple[int, str, int, float]] = []
 
@@ -26,7 +25,8 @@ class DevolucionesApp:
 
         def filtrar_facturas(e):
             filtro = filtro_field.value.lower()
-            facturas_filtradas = [factura for factura in facturas if filtro in factura[0].lower() or filtro in factura[1].lower()]
+            facturas_filtradas = [factura for factura in facturas if
+                                  filtro in factura[0].lower() or filtro in factura[1].lower()]
             actualizar_lista_facturas(facturas_filtradas)
 
         def seleccionar_factura(e):
@@ -51,7 +51,6 @@ class DevolucionesApp:
                             alignment=ft.MainAxisAlignment.CENTER,
                             horizontal_alignment=ft.CrossAxisAlignment.CENTER
                         ),
-
                         on_click=seleccionar_factura,
                         data=factura_id
                     )
@@ -61,14 +60,11 @@ class DevolucionesApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Factura", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
-                                    on_change=filtrar_facturas,
-                                    width=500,
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_facturas, width=500,
                                     border_color=ft.colors.OUTLINE)
 
         facturas_list = ft.ListView(expand=True, spacing=10, padding=20, auto_scroll=True)
 
-        # Inicialmente, mostrar todas las facturas
         actualizar_lista_facturas(facturas)
 
         self.page.add(
@@ -92,10 +88,25 @@ class DevolucionesApp:
 
         def agregar_devolucion(e):
             producto_id, producto_nombre, cantidad_vendida, precio = e.control.data
-            cantidad_devolver = int(e.control.parent.controls[1].value)
 
-            if cantidad_devolver <= 0 or cantidad_devolver > cantidad_vendida:
-                self.mostrar_mensaje("Error: Cantidad inválida", "red")
+            # Asegúrate de que estás capturando el campo de cantidad correctamente
+            cantidad_field = None
+            for control in e.control.parent.controls:
+                if isinstance(control, ft.TextField) and control.label == "Cantidad a Devolver":
+                    cantidad_field = control
+                    break
+
+            if cantidad_field is None:
+                self.mostrar_mensaje("Error: Campo de cantidad no encontrado", "red")
+                return
+
+            try:
+                cantidad_devolver = int(cantidad_field.value)
+                if cantidad_devolver <= 0 or cantidad_devolver > cantidad_vendida:
+                    raise ValueError("Error: Cantidad inválida")
+            except ValueError:
+                self.mostrar_mensaje(
+                    "Error: La cantidad debe ser un número entero positivo y no mayor que la cantidad vendida", "red")
                 return
 
             self.productos_a_devolver.append((producto_id, producto_nombre, cantidad_devolver, precio))
@@ -219,7 +230,8 @@ class DevolucionesApp:
                     cursor.execute("UPDATE Productos SET stock = ? WHERE id = ?", (nuevo_stock, producto_id))
 
                     fecha_devolucion = datetime.datetime.now().strftime("%Y-%m-%d")
-                    devolucion = Devolucion(self.factura_seleccionada, producto_id, cantidad_devolver, fecha_devolucion, cliente_id)
+                    devolucion = Devolucion(self.factura_seleccionada, producto_id, cantidad_devolver, fecha_devolucion,
+                                            cliente_id)
                     devolucion.save(cursor)
 
                 conn.commit()
@@ -233,12 +245,8 @@ class DevolucionesApp:
                 conn.rollback()
                 self.mostrar_mensaje(f"Error: {str(e)}", "red")
 
-    def mostrar_mensaje(self, mensaje: str, color: str):
-        snack_bar = ft.SnackBar(ft.Text(mensaje, color=color, weight=ft.FontWeight.BOLD), bgcolor=COLOR_SNACKBAR)
-        self.page.snack_bar = snack_bar
-        snack_bar.open = True
-        self.page.update()
 
 def devoluciones_app(page: ft.Page, main_menu_callback):
     app = DevolucionesApp(page, main_menu_callback)
     app.listar_facturas()
+

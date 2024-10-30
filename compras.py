@@ -4,15 +4,18 @@ from typing import List, Tuple, Optional
 from models import Compra, Producto, Proveedor
 from database import create_connection
 import datetime
+from libreria import BaseApp, FormField
 
 
-COLOR_SNACKBAR = "white"
-
-class ComprasApp:
+class ComprasApp(BaseApp):
     def __init__(self, page: ft.Page, main_menu_callback):
-        self.page = page
-        self.main_menu_callback = main_menu_callback
-        self.proveedor_field = ft.TextField(label="Proveedor", read_only=True)
+        super().__init__(page, main_menu_callback)
+        self.proveedor_field = ft.TextField(label="Proveedor",
+                                            read_only=True,
+                                            width=500,
+                                            border_color=ft.colors.OUTLINE,
+                                            disabled=True)
+
         self.nro_referencia_field = ft.TextField(label="Número de Referencia", width=200)
         self.carrito: List[Tuple[int, str, int, float]] = []
         self.total_compra: float = 0
@@ -25,7 +28,8 @@ class ComprasApp:
 
         def filtrar_proveedores(e):
             filtro = filtro_field.value.lower()
-            proveedores_filtrados = [proveedor for proveedor in proveedores if filtro in str(proveedor[0]).lower() or filtro in proveedor[1].lower()]
+            proveedores_filtrados = [proveedor for proveedor in proveedores if
+                                     filtro in str(proveedor[0]).lower() or filtro in proveedor[1].lower()]
             actualizar_lista_proveedores(proveedores_filtrados)
 
         def seleccionar_proveedor(e):
@@ -59,14 +63,11 @@ class ComprasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Proveedor", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
-                                    on_change=filtrar_proveedores,
-                                    width=500,
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_proveedores, width=500,
                                     border_color=ft.colors.OUTLINE)
 
         proveedor_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-        # Inicialmente, mostrar todos los proveedores
         actualizar_lista_proveedores(proveedores)
 
         self.page.add(
@@ -78,7 +79,6 @@ class ComprasApp:
                 border=ft.border.all(1, ft.colors.OUTLINE),
                 border_radius=ft.border_radius.all(10),
             ),
-            ft.ElevatedButton("Agregar Nuevo Proveedor", on_click=lambda _: self.agregar_proveedor_app()),
             ft.ElevatedButton("Volver", on_click=lambda _: self.main_menu())
         )
         self.page.update()
@@ -102,16 +102,36 @@ class ComprasApp:
 
         def filtrar_productos(e):
             filtro = filtro_field.value.lower()
-            productos_filtrados = [producto for producto in productos if filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
+            productos_filtrados = [producto for producto in productos if
+                                   filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
             actualizar_lista_productos(productos_filtrados)
 
         def agregar_al_carrito(e):
+            # Asegúrate de que e.control.data contiene los 6 valores esperados
             producto_id, producto_nombre, _, _, _, ultimo_precio_costo = e.control.data
-            cantidad = int(e.control.parent.controls[1].value)
-            precio_costo = float(e.control.parent.controls[2].value)
 
-            if cantidad <= 0:
-                self.mostrar_mensaje("Error: La cantidad debe ser un número entero positivo", "red")
+            # Asegúrate de que estás capturando el campo de cantidad correctamente
+            cantidad_field = None
+            precio_costo_field = None
+            for control in e.control.parent.controls:
+                if isinstance(control, ft.TextField) and control.label == "Cantidad":
+                    cantidad_field = control
+                elif isinstance(control, ft.TextField) and control.label == "Precio Costo":
+                    precio_costo_field = control
+
+            if cantidad_field is None or precio_costo_field is None:
+                self.mostrar_mensaje("Error: Campos de cantidad o precio de costo no encontrados", "red")
+                return
+
+            try:
+                cantidad = int(cantidad_field.value)
+                precio_costo = float(precio_costo_field.value)
+
+                if cantidad <= 0 or precio_costo <= 0:
+                    raise ValueError("La cantidad y el precio de costo deben ser números positivos")
+
+            except ValueError:
+                self.mostrar_mensaje("Error: La cantidad y el precio de costo deben ser números positivos", "red")
                 return
 
             self.carrito.append((producto_id, producto_nombre, cantidad, precio_costo))
@@ -124,20 +144,20 @@ class ComprasApp:
             for producto in productos_filtrados:
                 ultimo_precio_costo = producto[5] if producto[5] is not None else "N/A"
                 producto_row = ft.Row([
-                        ft.Text(f"Nombre: ", color="blue"),
-                        ft.Text(f"{producto[1]}", weight=ft.FontWeight.BOLD, color="white"),
-                        ft.Text(f"Stock: ", color="blue"),
-                        ft.Text(f"{producto[4]}", weight=ft.FontWeight.BOLD, color="white"),
-                        ft.Text(f"Último Precio Costo: $", color="blue"),
-                        ft.Text(f"{float(ultimo_precio_costo) if ultimo_precio_costo != 'N/A' else 'N/A'}",
-                                weight=ft.FontWeight.BOLD, color="white"),
-                        ft.TextField(label="Cantidad", value="1", width=100),
-                        ft.TextField(label="Precio Costo", value=str(ultimo_precio_costo), width=100),
-                        ft.ElevatedButton(
-                            "Agregar al carrito",
-                            on_click=agregar_al_carrito,
-                            data=(producto[0], producto[1], producto[3])
-                        )
+                    ft.Text(f"Nombre: ", color="blue"),
+                    ft.Text(f"{producto[1]}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Stock: ", color="blue"),
+                    ft.Text(f"{producto[4]}", weight=ft.FontWeight.BOLD, color="white"),
+                    ft.Text(f"Último Precio Costo: $", color="blue"),
+                    ft.Text(f"{float(ultimo_precio_costo) if ultimo_precio_costo != 'N/A' else 'N/A'}",
+                            weight=ft.FontWeight.BOLD, color="white"),
+                    ft.TextField(label="Cantidad", value="1", width=100),
+                    ft.TextField(label="Precio Costo", value=str(ultimo_precio_costo), width=100),
+                    ft.ElevatedButton(
+                        "Agregar al carrito",
+                        on_click=agregar_al_carrito,
+                        data=(producto[0], producto[1], producto[2], producto[3], producto[4], ultimo_precio_costo)
+                    )
                 ])
 
                 producto_list.controls.append(producto_row)
@@ -146,14 +166,11 @@ class ComprasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Productos", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
-                                    on_change=filtrar_productos,
-                                    width=500,
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_productos, width=500,
                                     border_color=ft.colors.OUTLINE)
 
         producto_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-        # Inicialmente, mostrar todos los productos
         actualizar_lista_productos(productos)
 
         self.page.add(
@@ -165,36 +182,6 @@ class ComprasApp:
                 border_radius=ft.border_radius.all(10),
             ),
             ft.ElevatedButton("Finalizar selección", on_click=lambda _: self.main_menu())
-        )
-        self.page.update()
-
-    def agregar_proveedor_app(self):
-        nombre_field = ft.TextField(label="Nombre")
-        telefono_field = ft.TextField(label="Teléfono")
-        email_field = ft.TextField(label="Email")
-
-        def guardar_proveedor(_):
-            try:
-                nuevo_proveedor = Proveedor(
-                    nombre=nombre_field.value,
-                    telefono=telefono_field.value,
-                    email=email_field.value
-                )
-                nuevo_proveedor.save()
-                self.proveedor_field.value = f"{nuevo_proveedor.id} - {nuevo_proveedor.nombre}"
-                self.mostrar_mensaje("Proveedor agregado con éxito", "green")
-                self.main_menu()
-            except ValueError as e:
-                self.mostrar_mensaje(f"Error: {str(e)}", "red")
-
-        self.page.controls.clear()
-        self.page.add(
-            ft.Text("Agregar Proveedor", size=24),
-            nombre_field,
-            telefono_field,
-            email_field,
-            ft.ElevatedButton("Guardar", on_click=guardar_proveedor),
-            ft.ElevatedButton("Cancelar", on_click=lambda _: self.main_menu())
         )
         self.page.update()
 
@@ -372,11 +359,6 @@ class ComprasApp:
 
         self.page.update()
 
-    def mostrar_mensaje(self, mensaje: str, color: str):
-        snack_bar = ft.SnackBar(ft.Text(mensaje, color=color, weight=ft.FontWeight.BOLD), bgcolor=COLOR_SNACKBAR)
-        self.page.snack_bar = snack_bar
-        snack_bar.open = True
-        self.page.update()
 
 def compras_app(page: ft.Page, main_menu_callback):
     app = ComprasApp(page, main_menu_callback)

@@ -11,23 +11,18 @@ from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 import platform
+from libreria import BaseApp, FormField
 
 FACTURA_DIR = 'facturas'
 ERROR_DIR = 'errores'
 COLOR_SNACKBAR = "white"
 COLOR_ERROR = "red"
 
-
 def leer_taza_interes(main_app_instance):
     try:
-        # Abrir el archivo en modo lectura
         with open('taza_impuesto.txt', 'r') as archivo:
-            # Leer el contenido del archivo
             contenido = archivo.read().strip()
-
-            # Intentar convertir el contenido a un número flotante
             taza_interes = float(contenido)
-
             return taza_interes
     except FileNotFoundError:
         main_app_instance.mostrar_mensaje("Error: El archivo 'taza_impuesto.txt' no fue encontrado.", COLOR_ERROR)
@@ -38,12 +33,15 @@ def leer_taza_interes(main_app_instance):
         main_app_instance.guardar_error("Error: El contenido del archivo 'taza_impuesto.txt' no es un número válido.")
         return None
 
-
-class VentasApp:
+class VentasApp(BaseApp):
     def __init__(self, page: ft.Page, main_menu_callback):
-        self.page = page
-        self.main_menu_callback = main_menu_callback
-        self.cliente_field = ft.TextField(label="Cliente", read_only=True)
+        super().__init__(page, main_menu_callback)
+        self.cliente_field = ft.TextField(label="Cliente",
+                                          read_only=True,
+                                          width=500,
+                                          border_color=ft.colors.OUTLINE,
+                                          disabled=True)
+
         self.carrito: List[Tuple[int, str, int, float]] = []
         self.total_venta: float = 0
 
@@ -89,14 +87,10 @@ class VentasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Cliente", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
-                                    on_change=filtrar_clientes,
-                                    width=500,
-                                    border_color=ft.colors.OUTLINE)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_clientes, width=500, border_color=ft.colors.OUTLINE)
 
         cliente_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-        # Inicialmente, mostrar todos los clientes
         actualizar_lista_clientes(clientes)
 
         self.page.add(
@@ -108,7 +102,6 @@ class VentasApp:
                 border=ft.border.all(1, ft.colors.OUTLINE),
                 border_radius=ft.border_radius.all(10),
             ),
-            ft.ElevatedButton("Agregar Nuevo Cliente", on_click=lambda _: self.agregar_cliente_app()),
             ft.ElevatedButton("Volver", on_click=lambda _: self.main_menu())
         )
         self.page.update()
@@ -126,9 +119,23 @@ class VentasApp:
 
         def agregar_al_carrito(e):
             producto_id, producto_nombre, producto_precio = e.control.data
-            cantidad = int(e.control.parent.controls[1].value)
 
-            if cantidad <= 0:
+            # Asegúrate de que estás capturando el campo de cantidad correctamente
+            cantidad_field = None
+            for control in e.control.parent.controls:
+                if isinstance(control, ft.TextField) and control.label == "Cantidad":
+                    cantidad_field = control
+                    break
+
+            if cantidad_field is None:
+                self.mostrar_mensaje("Error: Campo de cantidad no encontrado", "red")
+                return
+
+            try:
+                cantidad = int(cantidad_field.value)
+                if cantidad <= 0:
+                    raise ValueError("La cantidad debe ser un número entero positivo")
+            except ValueError:
                 self.mostrar_mensaje("Error: La cantidad debe ser un número entero positivo", "red")
                 return
 
@@ -174,14 +181,10 @@ class VentasApp:
         self.page.controls.clear()
         self.page.add(ft.Text("Seleccionar Productos", size=24))
 
-        filtro_field = ft.TextField(label="Filtrar por ID o Nombre",
-                                    on_change=filtrar_productos,
-                                    width=500,
-                                    border_color=ft.colors.OUTLINE)
+        filtro_field = ft.TextField(label="Filtrar por ID o Nombre", on_change=filtrar_productos, width=500, border_color=ft.colors.OUTLINE)
 
         producto_list = ft.ListView(expand=1, spacing=10, padding=20, auto_scroll=True)
 
-        # Inicialmente, mostrar todos los productos
         actualizar_lista_productos(productos)
 
         self.page.add(
@@ -193,36 +196,6 @@ class VentasApp:
                 border_radius=ft.border_radius.all(10),
             ),
             ft.ElevatedButton("Finalizar selección", on_click=lambda _: self.main_menu())
-        )
-        self.page.update()
-
-    def agregar_cliente_app(self):
-        nombre_field = ft.TextField(label="Nombre")
-        telefono_field = ft.TextField(label="Teléfono")
-        email_field = ft.TextField(label="Email")
-
-        def guardar_cliente(_):
-            try:
-                nuevo_cliente = Cliente(
-                    nombre=nombre_field.value,
-                    telefono=telefono_field.value,
-                    email=email_field.value
-                )
-                nuevo_cliente.save()
-                self.cliente_field.value = f"{nuevo_cliente.id} - {nuevo_cliente.nombre}"
-                self.mostrar_mensaje("Cliente agregado con éxito", "green")
-                self.main_menu()
-            except ValueError as e:
-                self.mostrar_mensaje(f"Error: {str(e)}", "red")
-
-        self.page.controls.clear()
-        self.page.add(
-            ft.Text("Agregar Cliente", size=24),
-            nombre_field,
-            telefono_field,
-            email_field,
-            ft.ElevatedButton("Guardar", on_click=guardar_cliente),
-            ft.ElevatedButton("Cancelar", on_click=lambda _: self.main_menu())
         )
         self.page.update()
 
@@ -380,12 +353,6 @@ class VentasApp:
 
         self.page.update()
 
-    def mostrar_mensaje(self, mensaje: str, color: str):
-        snack_bar = ft.SnackBar(ft.Text(mensaje, color=color, weight=ft.FontWeight.BOLD), bgcolor=COLOR_SNACKBAR)
-        self.page.snack_bar = snack_bar
-        snack_bar.open = True
-        self.page.update()
-
     def generar_numero_factura(self) -> str:
         with create_connection() as conn:
             cursor = conn.cursor()
@@ -431,7 +398,7 @@ class VentasApp:
         factura_info = [
             ["Nro. Factura:", factura_id],
             ["Fecha:", fecha],
-            ["Cliente:",   cliente_nombre],
+            ["Cliente:", cliente_nombre],
             ["Teléfono:", cliente_telefono],
             ["Email:", cliente_email]
         ]
@@ -546,8 +513,6 @@ class VentasApp:
         with open(ruta_archivo, 'w') as archivo:
             archivo.write(mensaje_error)
 
-
 def ventas_app(page: ft.Page, main_menu_callback):
     app = VentasApp(page, main_menu_callback)
     app.main_menu()
-
