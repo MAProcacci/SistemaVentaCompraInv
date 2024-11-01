@@ -3,16 +3,14 @@ import flet as ft
 import os
 import subprocess
 import platform
+from libreria import BaseApp
 
-COLOR_SNACKBAR = "white"
-
-class NavGraficosPDF:
+class NavGraficosPDF(BaseApp):
     def __init__(self, page: ft.Page, graficos_dir: str, main_menu_callback: callable):
-        self.page = page
+        super().__init__(page, main_menu_callback)
         self.graficos_dir = graficos_dir
         self.graficos = []
         self.selected_grafico = None
-        self.main_menu_callback = main_menu_callback
 
     def cargar_graficos(self):
         self.graficos = [f for f in os.listdir(self.graficos_dir) if f.endswith('.pdf')]
@@ -111,12 +109,6 @@ class NavGraficosPDF:
                     raise OSError("Sistema operativo no soportado para imprimir")
             except Exception as e:
                 self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
-
-    def mostrar_mensaje(self, mensaje: str, color: str = "green"):
-        snack_bar = ft.SnackBar(ft.Text(mensaje, weight=ft.FontWeight.BOLD, color=color), bgcolor=COLOR_SNACKBAR)
-        self.page.snack_bar = snack_bar
-        snack_bar.open = True
-        self.page.update()
 
 def nav_graficos_pdf_app(page: ft.Page, graficos_dir: str, main_menu_callback: callable):
     app = NavGraficosPDF(page, graficos_dir, main_menu_callback)

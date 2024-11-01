@@ -3,16 +3,14 @@ import flet as ft
 import os
 import subprocess
 import platform
+from libreria import BaseApp
 
-COLOR_SNACKBAR = "white"
-
-class NavReportesPDF:
+class NavReportesPDF(BaseApp):
     def __init__(self, page: ft.Page, reportes_dir: str, main_menu_callback: callable):
-        self.page = page
+        super().__init__(page, main_menu_callback)
         self.reportes_dir = reportes_dir
         self.reportes = []
         self.selected_report = None
-        self.main_menu_callback = main_menu_callback
 
     def cargar_reportes(self):
         self.reportes = [f for f in os.listdir(self.reportes_dir) if f.endswith('.pdf')]
@@ -112,13 +110,6 @@ class NavReportesPDF:
             except Exception as e:
                 self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
 
-    def mostrar_mensaje(self, mensaje: str, color: str = "green"):
-        snack_bar = ft.SnackBar(ft.Text(mensaje, weight=ft.FontWeight.BOLD, color=color), bgcolor=COLOR_SNACKBAR)
-        self.page.snack_bar = snack_bar
-        snack_bar.open = True
-        self.page.update()
-
 def nav_reportes_pdf_app(page: ft.Page, reportes_dir: str, main_menu_callback: callable):
     app = NavReportesPDF(page, reportes_dir, main_menu_callback)
     app.cargar_reportes()
-
