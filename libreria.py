@@ -29,6 +29,15 @@ def get_db_connection():
     finally:
         conn.close()
 
+def _crear_menu_fila(text1: str, on_click1: Callable,
+                     text2: str, on_click2: Callable) -> ft.Row:
+    """Crea una fila de botones para el menú principal."""
+    return ft.Row([
+        ft.ElevatedButton(text1, on_click=on_click1),
+        ft.Divider(height=20, color="transparent"),
+        ft.ElevatedButton(text2, on_click=on_click2),
+    ], alignment=ft.MainAxisAlignment.CENTER)
+
 @dataclass
 class FormField:
     """

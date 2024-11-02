@@ -121,11 +121,8 @@ class MainApp:
                                       "Reportes", ft.icons.DESCRIPTION, self.open_reportes),
                 self._create_menu_row("Devoluciones", ft.icons.ARROW_BACK, self.open_devoluciones,
                                       "Gráficos", ft.icons.BAR_CHART, self.open_graficos),
-                ft.Row([
-                    ft.ElevatedButton("Mantenimiento", icon=ft.icons.SETTINGS, on_click=self.open_mantenimiento),
-                    ft.Divider(height=20, color="transparent"),
-                    ft.ElevatedButton("Cambio de Usuario", icon=ft.icons.SWAP_HORIZ, on_click=self.cambiar_usuario),
-                ], alignment=ft.MainAxisAlignment.CENTER),
+                self._create_menu_row("Mantenimiento", ft.icons.SETTINGS, self.open_mantenimiento,
+                                      "Cambio de Usuario", ft.icons.SWAP_HORIZ, self.cambiar_usuario),
                 ft.Row([ft.ElevatedButton("Salir", on_click=lambda _: self.page.window.close())],
                        alignment=ft.MainAxisAlignment.CENTER),
             ], alignment=ft.MainAxisAlignment.CENTER)
