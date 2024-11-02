@@ -10,19 +10,23 @@ class NavFacturasPDF(BaseApp):
         super().__init__(page, main_menu_callback)
         self.facturas_dir = facturas_dir
         self.facturas = []
+        self.filtered_facturas = []
         self.selected_factura = None
+        self.filtro_field = ft.TextField(label="Filtrar por Número de Factura", on_change=self.filtrar_facturas, width=500, border_color=ft.colors.OUTLINE)
 
     def cargar_facturas(self):
         self.facturas = [f for f in os.listdir(self.facturas_dir) if f.endswith('.pdf')]
+        self.filtered_facturas = self.facturas
         self.mostrar_facturas()
 
     def mostrar_facturas(self, e=None):
         self.page.controls.clear()
         self.page.add(ft.Text("Facturas PDF", size=24, text_align=ft.TextAlign.CENTER))
         self.page.add(ft.Divider(height=20, color="transparent"))
+        self.page.add(self.filtro_field)
 
         list_view = ft.ListView(expand=True, spacing=10)
-        for factura in self.facturas:
+        for factura in self.filtered_facturas:
             list_view.controls.append(
                 ft.ListTile(
                     title=ft.Text(factura),
@@ -76,6 +80,12 @@ class NavFacturasPDF(BaseApp):
             except Exception as e:
                 self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
 
+    def filtrar_facturas(self, e):
+        filtro = self.filtro_field.value.lower()
+        self.filtered_facturas = [f for f in self.facturas if filtro in f.lower()]
+        self.mostrar_facturas()
+
 def nav_facturas_pdf_app(page: ft.Page, facturas_dir: str, main_menu_callback: callable):
     app = NavFacturasPDF(page, facturas_dir, main_menu_callback)
     app.cargar_facturas()
+

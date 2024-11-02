@@ -41,6 +41,7 @@ class VentasApp(BaseApp):
                                           width=500,
                                           border_color=ft.colors.OUTLINE,
                                           disabled=True)
+        self.descuento_field = ft.TextField(label="Descuento %:", value="0", width=100, border_color=ft.colors.OUTLINE)
 
         self.carrito: List[Tuple[int, str, int, float]] = []
         self.total_venta: float = 0
@@ -288,8 +289,11 @@ class VentasApp(BaseApp):
 
             try:
                 cliente_id = int(self.cliente_field.value.split(' - ')[0])
+                descuento_porcentaje = float(self.descuento_field.value)
+                if descuento_porcentaje < 0 or descuento_porcentaje > 100:
+                    raise ValueError("El descuento debe estar entre 0 y 100")
             except (ValueError, AttributeError, IndexError):
-                self.mostrar_mensaje("Error: Cliente no seleccionado correctamente", "red")
+                self.mostrar_mensaje("Error: Cliente no seleccionado correctamente o descuento inválido", "red")
                 return
 
             fecha = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -322,13 +326,14 @@ class VentasApp(BaseApp):
 
                     conn.commit()
                     self.mostrar_mensaje(f"Venta finalizada con éxito. Número de factura: {factura_id}", "green")
-                    self.generar_factura_pdf(factura_id, cliente_id, fecha)
+                    self.generar_factura_pdf(factura_id, cliente_id, fecha, descuento_porcentaje)
 
                 except Exception as e:
                     conn.rollback()
                     self.mostrar_mensaje(f"Error: {str(e)}", "red")
 
             self.cliente_field.value = ""
+            self.descuento_field.value = "0"
             self.carrito = []
             self.total_venta = 0
             self.actualizar_vista_carrito()
@@ -337,6 +342,7 @@ class VentasApp(BaseApp):
         self.page.add(
             ft.Text("Gestión de Ventas", size=24, weight=ft.FontWeight.BOLD, text_align=ft.TextAlign.CENTER),
             self.cliente_field,
+            self.descuento_field,
             ft.ElevatedButton("Seleccionar Cliente", on_click=lambda _: self.listar_clientes()),
             ft.ElevatedButton("Seleccionar Productos", on_click=lambda _: self.listar_productos()),
         )
@@ -367,7 +373,7 @@ class VentasApp(BaseApp):
             except ValueError:
                 return "00000001"
 
-    def generar_factura_pdf(self, factura_id: str, cliente_id: int, fecha: str):
+    def generar_factura_pdf(self, factura_id: str, cliente_id: int, fecha: str, descuento_porcentaje: float):
         ruta_facturas = os.path.join(os.getcwd(), FACTURA_DIR)
         os.makedirs(ruta_facturas, exist_ok=True)
         ruta_factura = os.path.join(ruta_facturas, f'factura_{factura_id}.pdf')
@@ -400,7 +406,8 @@ class VentasApp(BaseApp):
             ["Fecha:", fecha],
             ["Cliente:", cliente_nombre],
             ["Teléfono:", cliente_telefono],
-            ["Email:", cliente_email]
+            ["Email:", cliente_email],
+            ["Descuento:", f"{descuento_porcentaje}%"]
         ]
         t = Table(factura_info, colWidths=[100, 300])
         t.setStyle(TableStyle([
@@ -439,10 +446,14 @@ class VentasApp(BaseApp):
         elements.append(t)
         elements.append(Spacer(1, 12))
 
-        impuesto = total_venta * TAX_RATE
-        total_con_impuesto = total_venta + impuesto
+        descuento = total_venta * (descuento_porcentaje / 100)
+        total_venta_con_descuento = total_venta - descuento
+        impuesto = total_venta_con_descuento * TAX_RATE
+        total_con_impuesto = total_venta_con_descuento + impuesto
         data = [
             ["Total de la venta:", f"${total_venta:.2f}"],
+            [f"Descuento ({descuento_porcentaje:.2f}%):", f"${descuento:.2f}"],
+            ["Total con descuento:", f"${total_venta_con_descuento:.2f}"],
             [f"Impuesto ({TAX_RATE * 100:.2f}%):", f"${impuesto:.2f}"],
             ["Total con impuesto:", f"${total_con_impuesto:.2f}"]
         ]

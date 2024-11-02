@@ -21,9 +21,16 @@ import subprocess
 import platform
 from typing import List, Tuple, Optional, Any, Callable
 
-# Constants for repeated texts
+# Constantes para textos repetidos
 TITULO_REPORTES = "Reportes"
 COLOR_SNACKBAR = "white"
+TITULO_PRODUCTOS = "Reporte de Productos"
+TITULO_CLIENTES = "Reporte de Clientes"
+TITULO_PROVEEDORES = "Reporte de Proveedores"
+TITULO_VENTAS = "Reporte de Ventas"
+TITULO_COMPRAS = "Reporte de Compras"
+TITULO_BALANCE = "Balance"
+TITULO_DEVOLUCIONES = "Reporte de Devoluciones"
 
 class ReportesApp(BaseApp):
     """
@@ -44,6 +51,24 @@ class ReportesApp(BaseApp):
         os.makedirs(self.reportes_dir_csv, exist_ok=True)
         os.makedirs(self.reportes_dir_pdf, exist_ok=True)
 
+    def listar_ventas(self, desde: Optional[str] = None, hasta: Optional[str] = None, producto_id: Optional[int] = None,
+                      cliente_id: Optional[int] = None):
+        listar_ventas(self, desde, hasta, producto_id, cliente_id)
+
+    def listar_compras(self, desde: Optional[str] = None, hasta: Optional[str] = None,
+                       producto_id: Optional[int] = None,
+                       proveedor_id: Optional[int] = None):
+        listar_compras(self, desde, hasta, producto_id, proveedor_id)
+
+    def balance(self, desde: Optional[str] = None, hasta: Optional[str] = None, producto_id: Optional[int] = None,
+                cliente_id: Optional[int] = None, proveedor_id: Optional[int] = None):
+        balance(self, desde, hasta, producto_id, cliente_id, proveedor_id)
+
+    def listar_devoluciones(self, desde: Optional[str] = None, hasta: Optional[str] = None,
+                            producto_id: Optional[int] = None,
+                            cliente_id: Optional[int] = None):
+        listar_devoluciones(self, desde, hasta, producto_id, cliente_id)
+
     def main_menu(self):
         """
         Muestra el menú principal de reportes.
@@ -54,10 +79,10 @@ class ReportesApp(BaseApp):
             ft.ElevatedButton("Productos", on_click=lambda _: listar_productos(self)),
             ft.ElevatedButton("Clientes", on_click=lambda _: listar_clientes(self)),
             ft.ElevatedButton("Proveedores", on_click=lambda _: listar_proveedores(self)),
-            ft.ElevatedButton("Ventas", on_click=lambda _: self._open_report_menu("Ventas", listar_ventas)),
-            ft.ElevatedButton("Compras", on_click=lambda _: self._open_report_menu("Compras", listar_compras)),
-            ft.ElevatedButton("Devoluciones", on_click=lambda _: self._open_report_menu("Devoluciones", listar_devoluciones)),
-            ft.ElevatedButton("Balances", on_click=lambda _: self._open_report_menu("Balances", balance)),
+            ft.ElevatedButton("Ventas", on_click=lambda _: self._open_report_menu(TITULO_VENTAS, listar_ventas)),
+            ft.ElevatedButton("Compras", on_click=lambda _: self._open_report_menu(TITULO_COMPRAS, listar_compras)),
+            ft.ElevatedButton("Devoluciones", on_click=lambda _: self._open_report_menu(TITULO_DEVOLUCIONES, listar_devoluciones)),
+            ft.ElevatedButton("Balances", on_click=lambda _: self._open_report_menu(TITULO_BALANCE, balance)),
             ft.ElevatedButton("Navegar en Reportes PDF", on_click=lambda _: self.navegar_reportes_pdf()),
             ft.ElevatedButton("Navegar en Facturas PDF", on_click=lambda _: self.navegar_facturas_pdf()),
             ft.ElevatedButton("Volver al Menú Principal", on_click=lambda _: self.main_menu_callback())
@@ -174,6 +199,80 @@ class ReportesApp(BaseApp):
         mensaje = f"Archivo PDF generado: {ruta_archivo}"
         self.mostrar_mensaje(mensaje, "green")  # Añade el color aquí
         self.mostrar_confirmacion_imprimir(ruta_archivo)
+
+    def _mostrar_opciones_filtro(self, titulo: str, desde: str, hasta: str):
+        opciones_filtro = {
+            TITULO_VENTAS: ["Producto", "Cliente"],
+            TITULO_COMPRAS: ["Producto", "Proveedor"],
+            TITULO_DEVOLUCIONES: ["Producto", "Cliente"],
+            TITULO_BALANCE: ["Producto", "Cliente", "Proveedor"]
+        }
+
+        self.page.controls.clear()
+        self.page.add(
+            ft.Text("Filtrar por", size=24),
+            ft.Column([
+                ft.ElevatedButton(opcion,
+                                  on_click=lambda _, o=opcion: self.seleccionar_filtro(_, desde, hasta, o, titulo))
+                for opcion in opciones_filtro.get(titulo, [])
+            ], horizontal_alignment=ft.CrossAxisAlignment.CENTER),
+            ft.ElevatedButton("Volver", on_click=lambda _: self.main_menu())
+        )
+        self.page.update()
+
+    def seleccionar_filtro(self, e, desde: str, hasta: str, tipo_filtro: str, reporte_tipo: str):
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if tipo_filtro == "Producto":
+                cursor.execute("SELECT id, nombre FROM Productos")
+            elif tipo_filtro == "Cliente":
+                cursor.execute("SELECT id, nombre FROM Clientes")
+            elif tipo_filtro == "Proveedor":
+                cursor.execute("SELECT id, nombre FROM Proveedores")
+            opciones = cursor.fetchall()
+
+        def filtrar_opciones(e):
+            filtro = filtro_field.value.lower()
+            opciones_filtradas = [opcion for opcion in opciones if
+                                  filtro in str(opcion[0]).lower() or filtro in opcion[1].lower()]
+            actualizar_lista_opciones(opciones_filtradas)
+
+        def actualizar_lista_opciones(opciones_filtradas):
+            lista_opciones.controls.clear()
+            for opcion in opciones_filtradas:
+                lista_opciones.controls.append(
+                    ft.ElevatedButton(opcion[1], on_click=lambda _, o=opcion: seleccionar_opcion(_, o[0]))
+                )
+            self.page.update()
+
+        def seleccionar_opcion(e, opcion_id):
+            if reporte_tipo == TITULO_VENTAS:
+                self.listar_ventas(desde, hasta, producto_id=opcion_id if tipo_filtro == "Producto" else None,
+                                   cliente_id=opcion_id if tipo_filtro == "Cliente" else None)
+            elif reporte_tipo == TITULO_COMPRAS:
+                self.listar_compras(desde, hasta, producto_id=opcion_id if tipo_filtro == "Producto" else None,
+                                    proveedor_id=opcion_id if tipo_filtro == "Proveedor" else None)
+            elif reporte_tipo == TITULO_BALANCE:
+                self.balance(desde, hasta, producto_id=opcion_id if tipo_filtro == "Producto" else None,
+                             cliente_id=opcion_id if tipo_filtro == "Cliente" else None,
+                             proveedor_id=opcion_id if tipo_filtro == "Proveedor" else None)
+            elif reporte_tipo == TITULO_DEVOLUCIONES:
+                self.listar_devoluciones(desde, hasta, producto_id=opcion_id if tipo_filtro == "Producto" else None,
+                                         cliente_id=opcion_id if tipo_filtro == "Cliente" else None)
+
+        filtro_field = ft.TextField(label=f"Filtrar por ID o {tipo_filtro}", on_change=filtrar_opciones)
+        lista_opciones = ft.ListView(expand=True, spacing=10, padding=20)
+
+        self.page.controls.clear()
+        self.page.add(
+            ft.Text(f"Seleccionar {tipo_filtro}", size=24),
+            filtro_field,
+            lista_opciones,
+            ft.ElevatedButton("Volver", on_click=lambda _: self.main_menu())
+        )
+
+        actualizar_lista_opciones(opciones)
+        self.page.update()
 
     def _obtener_datos_reporte(self, titulo: str, elementos: List[Any]) -> Tuple[List[str], List[List[Any]]]:
         """
