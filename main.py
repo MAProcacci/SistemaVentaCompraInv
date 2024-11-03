@@ -32,6 +32,9 @@ COLOR_EXITO = "black"
 COLOR_SNACKBAR = "white"
 
 class MainApp:
+    """
+    Clase principal de la aplicación.
+    """
     def __init__(self, page: ft.Page):
         """
         Constructor de la clase MainApp.
@@ -76,6 +79,11 @@ class MainApp:
         self.key, self.usuarios_reales = cargar_credenciales()
 
         def validar_login(e):
+            """
+            Valida credenciales de usuario y contraseña.
+            Args:
+                e (Event): Evento que se dispara cuando se hace click en el botón.
+            """
             usuario_ingresado = usuario_field.value
             password_ingresado = password_field.value
 
@@ -131,7 +139,17 @@ class MainApp:
 
     def _create_menu_row(self, text1: str, icon1: str, on_click1: Callable,
                          text2: str, icon2: str, on_click2: Callable) -> ft.Row:
-        """Crea una fila de botones para el menú principal."""
+        """Crea una fila de botones para el menú principal.
+        Args:
+            text1 (str): Texto del botón 1.
+            icon1 (str): Icono del botón 1.
+            on_click1 (Callable): Función que se llama cuando se hace click en el botón 1.
+            text2 (str): Texto del botón 2.
+            icon2 (str): Icono del botón 2.
+            on_click2 (Callable): Función que se llama cuando se hace click en el botón 2.
+            Returns:
+                ft.Row: Fila de botones con la información de la entidad.
+                """
         return ft.Row([
             ft.ElevatedButton(text1, icon=icon1, on_click=on_click1),
             ft.Divider(height=20, color="transparent"),
@@ -232,6 +250,7 @@ class MainApp:
         self.page.controls.clear()
 
         def guardar_usuario(_):
+            """Guarda el usuario creado."""
             nuevo_usuario = nuevo_usuario_field.value
             nueva_password = nueva_password_field.value
 
@@ -267,6 +286,7 @@ class MainApp:
         self.page.controls.clear()
 
         def actualizar_usuario(_):
+            """Actualiza un usuario existente."""
             usuario_seleccionado = usuario_dropdown.value
             nueva_password = nueva_password_field.value
 
@@ -405,6 +425,11 @@ class MainApp:
             self.guardar_error(mensaje)
 
     def guardar_error(self, mensaje_error: str):
+        """
+        Crea un archivo de texto con el mensaje de error y la fecha y hora.
+
+        Args:
+            mensaje_error (str): Mensaje de error a guardar."""
         ruta_errores = os.path.join(os.getcwd(), 'errores')
         os.makedirs(ruta_errores, exist_ok=True)
 
@@ -416,6 +441,10 @@ class MainApp:
             archivo.write(mensaje_error)
 
 def abrir_instalador_sumatra_pdf(main_app_instance):
+    """Abre el instalador de SumatraPDF.
+    Args:
+        main_app_instance (MainApp): Instancia de la clase MainApp.
+    """
     # Ruta al instalador de SumatraPDF
     ruta_instalador = os.path.join(os.getcwd(), 'SumatraPDF_Installer\\SumatraPDF-3.5.2-64-install.exe')
 

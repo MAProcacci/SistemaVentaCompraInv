@@ -13,6 +13,9 @@ import queue
 
 # Función para crear, buscar y restaurar la base de datos de backup
 class BackupApp:
+    """
+    Esta clase representa la aplicación de respaldo de base de datos.
+    """
     def __init__(self, root):
         self.root = root
         self.root.title("Respaldo de Base de Datos")
@@ -41,12 +44,20 @@ class BackupApp:
 
     # Función para cerrar la aplicación
     def on_closing(self):
+        """
+        Cierra la aplicación.
+        :return: None
+        """
         self.is_running = False
         self.stop_search.set()
         self.root.destroy()
 
     # Función para comprobar los mensajes
     def check_messages(self):
+        """
+        Comprueba los mensajes en la cola y muestra los mensajes en la interfaz.
+        :return: None
+        """
         if not self.is_running:
             return
         try:
@@ -70,6 +81,12 @@ class BackupApp:
 
     # Función para buscar la base de datos
     def buscar_base_de_datos(self, nombre_bd, ruta_inicial):
+        """
+        Busca la base de datos en la ruta inicial.
+        :param nombre_bd: Nombre de la base de datos.
+        :param ruta_inicial: Ruta inicial para buscar la base de datos.
+        :return: Ruta de la base de datos encontrada o None si no se encuentra.
+        """
         try:
             for root, dirs, files in os.walk(ruta_inicial):
                 if self.stop_search.is_set():
@@ -87,6 +104,12 @@ class BackupApp:
 
     # Función para respaldar la base de datos
     def respaldar_base_de_datos(self, ruta_bd, ruta_respaldo):
+        """
+        Respaldar la base de datos.
+        :param ruta_bd: Ruta de la base de datos.
+        :param ruta_respaldo: Ruta de respaldo.
+        :return: Ruta del respaldo creado o None si hay un error.
+        """
         try:
             nombre_bd = os.path.basename(ruta_bd)
             fecha_hora = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -106,6 +129,11 @@ class BackupApp:
 
     # Función para restaurar la base de datos
     def restaurar_base_de_datos(self, ruta_respaldo):
+        """
+        Restaurar la base de datos.
+        :param ruta_respaldo: Ruta del respaldo.
+        :return: Ruta de la base de datos restaurada o None si hay un error.
+        """
         try:
             backups = [f for f in os.listdir(ruta_respaldo) if f.startswith("inventario.db_") and f.endswith(".bak")]
             if not backups:
@@ -132,6 +160,10 @@ class BackupApp:
 
     # Función para iniciar el proceso de respaldo
     def iniciar_respaldo(self):
+        """
+        Iniciar el proceso de respaldo.
+        :return: None
+        """
         self.button_backup.config(state=tk.DISABLED)
         self.button_restore.config(state=tk.DISABLED)
         self.progress["value"] = 0
@@ -145,6 +177,10 @@ class BackupApp:
 
         # Función para realizar la tarea de respaldo
         def tarea_respaldo():
+            """
+            Realiza el proceso de respaldo.
+            :return: None
+            """
             ruta_bd = self.buscar_base_de_datos(nombre_bd, ruta_inicial)
             if ruta_bd and not self.stop_search.is_set():
                 self.message_queue.put(
@@ -175,6 +211,10 @@ class BackupApp:
 
     # Función para iniciar el proceso de restauración
     def iniciar_restaurar(self):
+        """
+        Iniciar el proceso de restauración.
+        :return: None
+        """
         self.button_backup.config(state=tk.DISABLED)
         self.button_restore.config(state=tk.DISABLED)
         self.progress["value"] = 0
@@ -186,6 +226,10 @@ class BackupApp:
 
         # Función para realizar la tarea de restauración
         def tarea_restaurar():
+            """
+            Realiza el proceso de restauración.
+            :return: None
+            """
             ruta_restaurada = self.restaurar_base_de_datos(ruta_respaldo)
             if ruta_restaurada:
                 self.progress["value"] = 100
@@ -202,6 +246,10 @@ class BackupApp:
 
     # Función para finalizar la busqueda
     def finalizar_busqueda(self):
+        """
+        Finaliza la búsqueda.
+        :return: None
+        """
         self.stop_search.set()
         self.progress["value"] = 100
         self.root.update_idletasks()
@@ -213,6 +261,10 @@ class BackupApp:
 
     # Función para terminar la aplicación
     def terminar_aplicacion(self):
+        """
+        Termina la aplicación.
+        :return: None
+        """
         self.is_running = False
         self.stop_search.set()
         self.root.destroy()

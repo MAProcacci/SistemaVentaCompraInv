@@ -18,11 +18,20 @@ ALTO_GRAFICO = 600
 COLOR_SNACKBAR = "white"
 
 class GraficosComprasProductos:
+    """
+    Esta clase se encarga de generar los gráficos de compras acumuladas y compras por categoría.
+    """
     def __init__(self, page: ft.Page, main_menu_callback: Callable[[], None]):
         self.page = page
         self.main_menu_callback = main_menu_callback
 
     def generar_grafico_compras_acumuladas(self, desde: str, hasta: str) -> str:
+        """
+        Genera un gráfico de compras acumuladas y lo guarda en un archivo PDF.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :return: La ruta del archivo PDF generado.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             query = """
@@ -58,6 +67,14 @@ class GraficosComprasProductos:
         return image_base64
 
     def generar_pdf(self, image_base64: str, desde: str, hasta: str, orientation: str = 'portrait'):
+        """
+        Genera un archivo PDF con el gráfico de compras acumuladas.
+        :param image_base64: La imagen del gráfico en formato base64.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :param orientation: Orientación del PDF (portrait o landscape).
+        :return: La ruta del archivo PDF generado.
+        """
         pdf_dir = os.path.join(os.getcwd(), 'Graficos_PDF')
         os.makedirs(pdf_dir, exist_ok=True)
         pdf_path = os.path.join(pdf_dir, f'top_25_comp_prod_{desde}_{hasta}.pdf')
@@ -87,13 +104,24 @@ class GraficosComprasProductos:
         return pdf_path
 
     def mostrar_grafico(self, desde: str, hasta: str):
+        """
+        Muestra el gráfico de compras acumuladas en una ventana emergente.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        """
         image_base64 = self.generar_grafico_compras_acumuladas(desde, hasta)
 
         def close_dlg(_):
+            """
+            Cierra la ventana emergente.
+            """
             dlg.open = False
             self.page.update()
 
         def generar_pdf_grafico(_):
+            """
+            Genera un archivo PDF con el gráfico de compras acumuladas.
+            """
             pdf_path = self.generar_pdf(image_base64, desde, hasta, orientation='landscape')
             self.mostrar_mensaje(f"PDF generado en: {pdf_path}")
 
@@ -120,12 +148,20 @@ class GraficosComprasProductos:
         self.page.update()
 
     def abrir_calendario(self, campo_fecha: ft.TextField):
+        """
+        Abre el calendario para seleccionar una fecha.
+        :param campo_fecha: El campo de texto donde se mostrará la fecha seleccionada.
+        :return: None
+        """
         date_picker = ft.DatePicker(
             first_date=datetime(2020, 1, 1),
             last_date=datetime(2030, 12, 31)
         )
 
         def on_change(_):
+            """
+            Maneja el cambio de fecha seleccionada.
+            """
             if date_picker.value:
                 campo_fecha.value = date_picker.value.strftime(FORMATO_FECHA)
                 self.page.update()
@@ -137,12 +173,20 @@ class GraficosComprasProductos:
         self.page.update()
 
     def open_compras_acumuladas(self):
+        """
+        Abre la ventana de compras acumuladas.
+        :return: None
+        """
         desde_field = ft.TextField(label="Desde", hint_text=FORMATO_FECHA,
                                    value=datetime.today().strftime(FORMATO_FECHA))
         hasta_field = ft.TextField(label="Hasta", hint_text=FORMATO_FECHA,
                                    value=datetime.today().strftime(FORMATO_FECHA))
 
         def generar_grafico(_):
+            """
+            Genera el gráfico de compras acumuladas.
+            :return: None
+            """
             desde = desde_field.value
             hasta = hasta_field.value
 
@@ -172,6 +216,10 @@ class GraficosComprasProductos:
         self.page.update()
 
     def main_menu(self):
+        """
+        Muestra el menú principal de gráficos.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(
             ft.Text(TITULO_COMPRAS_ACUMULADAS, size=24),
@@ -181,6 +229,12 @@ class GraficosComprasProductos:
         self.page.update()
 
     def crear_fila_fecha(self, campo_fecha: ft.TextField, etiqueta: str) -> ft.Row:
+        """
+        Crea una fila con un campo de fecha y un botón para abrir el calendario.
+        :param campo_fecha: El campo de texto donde se mostrará la fecha seleccionada.
+        :param etiqueta: La etiqueta que se mostrará junto al campo de fecha.
+        :return: Una fila con el campo de fecha y el botón para abrir el calendario.
+        """
         return ft.Row([
             campo_fecha,
             ft.ElevatedButton(
@@ -191,15 +245,31 @@ class GraficosComprasProductos:
         ], alignment=ft.MainAxisAlignment.CENTER)
 
     def mostrar_error(self, mensaje: str):
+        """
+        Muestra un mensaje de error en la interfaz.
+        :param mensaje: El mensaje de error a mostrar.
+        :return: None
+        """
         self.page.snack_bar = ft.SnackBar(ft.Text(mensaje), bgcolor=COLOR_SNACKBAR)
         self.page.snack_bar.open = True
         self.page.update()
 
     def mostrar_mensaje(self, mensaje: str):
+        """
+        Muestra un mensaje en la interfaz.
+        :param mensaje: El mensaje a mostrar.
+        :return: None
+        """
         self.page.snack_bar = ft.SnackBar(ft.Text(mensaje, weight=ft.FontWeight.BOLD), bgcolor=COLOR_SNACKBAR)
         self.page.snack_bar.open = True
         self.page.update()
 
 def graf_comp_producto_app(page: ft.Page, main_menu_callback: Callable[[], None]):
+    """
+    Crea una instancia de la aplicación de gráficos de compras por producto y la ejecuta.
+    :param page: La página de la interfaz de usuario.
+    :param main_menu_callback: La función de devolución de llamada para volver al menú principal.
+    :return: None
+    """
     app = GraficosComprasProductos(page, main_menu_callback)
     app.open_compras_acumuladas()

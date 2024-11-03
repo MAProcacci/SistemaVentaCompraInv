@@ -4,16 +4,17 @@ from cryptography.fernet import Fernet
 import os
 
 def password_app():
+    """
+    Esta función genera una clave de encriptación y guarda las credenciales en un archivo.
+    :return: None
+    """
     # Verificar si el archivo 'password.txt' ya existe
     if not os.path.exists("password.txt"):
         # Generar una clave de encriptación
         key = Fernet.generate_key()
         cipher_suite = Fernet(key)
 
-        # Mostrar la clave generada (para copiarla en tu código)
-        # print(key)
-
-        # Credenciales
+        # Credenciales Iniciales (usuario:contraseña)
         usuarios = [
             "admin:admin",
             "user1:password1",
@@ -26,8 +27,6 @@ def password_app():
             for usuario in usuarios:
                 usuario_encriptado = cipher_suite.encrypt(usuario.encode())
                 file.write(usuario_encriptado + b"\n")
-    #else:
-        #print("El archivo 'password.txt' ya existe. No se creará nuevamente.")
 
 # Si deseas ejecutar la función directamente desde este archivo
 if __name__ == "__main__":

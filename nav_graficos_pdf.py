@@ -6,6 +6,9 @@ import platform
 from libreria import BaseApp
 
 class NavGraficosPDF(BaseApp):
+    """
+    Clase para mostrar los gráficos PDF en una lista y permitir la selección de uno para abrirlo.
+    """
     def __init__(self, page: ft.Page, graficos_dir: str, main_menu_callback: callable):
         super().__init__(page, main_menu_callback)
         self.graficos_dir = graficos_dir
@@ -13,10 +16,19 @@ class NavGraficosPDF(BaseApp):
         self.selected_grafico = None
 
     def cargar_graficos(self):
+        """
+        Carga los gráficos PDF desde el directorio especificado.
+        :return: None
+        """
         self.graficos = [f for f in os.listdir(self.graficos_dir) if f.endswith('.pdf')]
         self.mostrar_graficos()
 
     def mostrar_graficos(self, e=None):
+        """
+        Muestra los gráficos PDF en una lista y permite seleccionar uno para abrirlo.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(ft.Text("Gráficos PDF", size=24, text_align=ft.TextAlign.CENTER))
         self.page.add(ft.Divider(height=20, color="transparent"))
@@ -34,10 +46,20 @@ class NavGraficosPDF(BaseApp):
         self.page.update()
 
     def seleccionar_grafico(self, grafico: str):
+        """
+        Selecciona un gráfico PDF para abrirlo.
+        :param grafico: Nombre del gráfico PDF a abrir.
+        :return: None
+        """
         self.selected_grafico = grafico
         self.mostrar_opciones()
 
     def mostrar_opciones(self, e=None):
+        """
+        Muestra las opciones disponibles para el gráfico seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(ft.Text(f"Opciones para: {self.selected_grafico}", size=24, text_align=ft.TextAlign.CENTER))
         self.page.add(ft.Divider(height=20, color="transparent"))
@@ -49,12 +71,25 @@ class NavGraficosPDF(BaseApp):
         self.page.update()
 
     def confirmar_eliminar(self, e):
+        """
+        Muestra un cuadro de diálogo de confirmación para eliminar un gráfico PDF.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         def eliminar(_):
+            """
+            Eliminar el gráfico seleccionado.
+            :return: None
+            """
             self.eliminar_grafico()
             self.page.dialog.open = False
             self.page.update()
 
         def cancelar(_):
+            """
+            Cerrar el cuadro de diálogo de confirmación.
+            :return: None
+            """
             self.page.dialog.open = False
             self.page.update()
 
@@ -73,6 +108,10 @@ class NavGraficosPDF(BaseApp):
         self.page.update()
 
     def eliminar_grafico(self):
+        """
+        Elimina el gráfico seleccionado.
+        :return: None
+        """
         if self.selected_grafico:
             ruta_grafico = os.path.join(self.graficos_dir, self.selected_grafico)
             os.remove(ruta_grafico)
@@ -82,6 +121,11 @@ class NavGraficosPDF(BaseApp):
             self.mostrar_graficos()
 
     def ver_grafico(self, e):
+        """
+        Abre el gráfico PDF seleccionado en el visor de PDF.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         if self.selected_grafico:
             ruta_grafico = os.path.join(self.graficos_dir, self.selected_grafico)
             try:
@@ -94,6 +138,11 @@ class NavGraficosPDF(BaseApp):
                 self.mostrar_mensaje(f"Error al abrir el gráfico: {str(e)}", "red")
 
     def imprimir_grafico(self, e):
+        """
+        Imprime el gráfico PDF seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         if self.selected_grafico:
             ruta_reporte = os.path.join(self.graficos_dir, self.selected_grafico)
             try:
@@ -111,5 +160,12 @@ class NavGraficosPDF(BaseApp):
                 self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
 
 def nav_graficos_pdf_app(page: ft.Page, graficos_dir: str, main_menu_callback: callable):
+    """
+    Crea una instancia de la aplicación de navegación de gráficos PDF y la ejecuta.
+    :param page: Página de la interfaz gráfica.
+    :param graficos_dir: Directorio donde se almacenan los gráficos PDF.
+    :param main_menu_callback: Función de devolución de llamada para volver al menú principal.
+    :return: None
+    """
     app = NavGraficosPDF(page, graficos_dir, main_menu_callback)
     app.cargar_graficos()

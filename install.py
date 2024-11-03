@@ -12,6 +12,9 @@ import win32com.client
 
 # Función para la instalación del Sistema de Ventas e Inventario.
 class InstallerApp:
+    """
+    Clase para la aplicación de instalación del Sistema de Ventas e Inventario.
+    """
     def __init__(self, root):
         self.root = root
         self.root.title("Instalador de VentaCompraInven")
@@ -32,11 +35,21 @@ class InstallerApp:
 
     # Obtener todas las unidades disponibles entre 'C', 'D' y 'E'.
     def get_available_drives(self):
+        """
+        Obtener todas las unidades disponibles entre 'C', 'D' y 'E'.
+        :return: Lista de unidades disponibles.
+        """
         drives = [f"{d}:\\" for d in "CDE" if os.path.exists(f"{d}:\\")]
         return drives
 
     # Función para la instalación.
     def install(self):
+        """
+        Función para la instalación.
+        Instala el Sistema de Ventas e Inventario en la unidad seleccionada.
+        :param self: Instancia de la clase InstallerApp.
+        :return: None
+        """
         selected_drive = self.drive_var.get()
         install_path = os.path.join(selected_drive, "VCI")
         sumatra_installer_path = os.path.join(install_path, "SumatraPDF_Installer")
@@ -90,6 +103,12 @@ class InstallerApp:
 
     # Crear acceso directo en el escritorio
     def create_shortcut(self, target_path, name):
+        """
+        Crear acceso directo en el escritorio
+        :param target_path: Ruta al archivo al que se le creará el acceso directo.
+        :param name: Nombre del acceso directo.
+        :return: None
+        """
         desktop = winshell.desktop()
         shortcut_path = os.path.join(desktop, name)
         icon_path = "ruta_del_icono.ico"  # Reemplaza con la ruta del icono que deseas usar

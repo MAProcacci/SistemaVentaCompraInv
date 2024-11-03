@@ -3,10 +3,19 @@ import os
 import pdfkit
 
 class Factura:
+    """
+    Clase para generar un PDF de la factura
+    """
     def __init__(self, venta):
         self.venta = venta
 
     def generar_pdf(self, tax, ruta_facturas):
+        """
+        Genera un PDF de la factura
+        :param tax: Impuesto a aplicar a la venta
+        :param ruta_facturas: Ruta donde se guardará el PDF
+        :return: None
+        """
         # Crear el directorio de facturas si no existe
         if not os.path.exists(ruta_facturas):
             os.makedirs(ruta_facturas)

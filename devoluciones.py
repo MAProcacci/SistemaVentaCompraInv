@@ -8,12 +8,19 @@ from libreria import BaseApp, FormField
 
 
 class DevolucionesApp(BaseApp):
+    """
+    Clase para la aplicación de devoluciones.
+    """
     def __init__(self, page: ft.Page, main_menu_callback):
         super().__init__(page, main_menu_callback)
         self.factura_seleccionada: Optional[str] = None
         self.productos_a_devolver: List[Tuple[int, str, int, float]] = []
 
     def listar_facturas(self):
+        """
+        Muestra una lista de facturas y permite seleccionar una.
+        :return: None
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("""
@@ -24,17 +31,32 @@ class DevolucionesApp(BaseApp):
             facturas = cursor.fetchall()
 
         def filtrar_facturas(e):
+            """
+            Filtra las facturas por nombre o número de factura.
+            :param e: Evento de cambio de texto en el campo de filtro.
+            :return: None
+            """
             filtro = filtro_field.value.lower()
             facturas_filtradas = [factura for factura in facturas if
                                   filtro in factura[0].lower() or filtro in factura[1].lower()]
             actualizar_lista_facturas(facturas_filtradas)
 
         def seleccionar_factura(e):
+            """
+            Selecciona una factura y muestra los productos asociados.
+            :param e: Evento de selección de una factura.
+            :return: None
+            """
             factura_id = e.control.data
             self.factura_seleccionada = factura_id
             self.mostrar_factura(factura_id)
 
         def actualizar_lista_facturas(facturas_filtradas):
+            """
+            Actualiza la lista de facturas filtradas.
+            :param facturas_filtradas: Lista de facturas filtradas.
+            :return: None
+            """
             facturas_list.controls.clear()
             for factura in facturas_filtradas:
                 factura_id, cliente_nombre = factura
@@ -81,12 +103,22 @@ class DevolucionesApp(BaseApp):
         self.page.update()
 
     def mostrar_factura(self, factura_id: str):
+        """
+        Muestra los detalles de la factura seleccionada.
+        :param factura_id: ID de la factura.
+        :return: None
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Ventas WHERE factura_id=?", (factura_id,))
             detalles_factura = cursor.fetchall()
 
         def agregar_devolucion(e):
+            """
+            Agrega un producto a la lista de productos a devolver.
+            :param e: Evento de clic en el botón de agregar devolución.
+            :return: None
+            """
             producto_id, producto_nombre, cantidad_vendida, precio = e.control.data
 
             # Asegúrate de que estás capturando el campo de cantidad correctamente
@@ -157,6 +189,11 @@ class DevolucionesApp(BaseApp):
         self.page.update()
 
     def mostrar_resumen_devoluciones(self, _):
+        """
+        Muestra el resumen de las devoluciones seleccionadas.
+        :param _: Evento de clic en el botón de finalizar selección.
+        :return: None
+        """
         if not self.productos_a_devolver:
             self.mostrar_mensaje("Error: No se han seleccionado productos para devolver", "red")
             return
@@ -201,6 +238,11 @@ class DevolucionesApp(BaseApp):
         self.page.update()
 
     def finalizar_devolucion(self, _):
+        """
+        Finaliza la devolución de productos seleccionados.
+        :param _: Evento de clic en el botón de finalizar devolución.
+        :return: None
+        """
         if not self.factura_seleccionada or not self.productos_a_devolver:
             self.mostrar_mensaje("Error: Seleccione una factura y al menos un producto para devolver", "red")
             return
@@ -247,6 +289,12 @@ class DevolucionesApp(BaseApp):
 
 
 def devoluciones_app(page: ft.Page, main_menu_callback):
+    """
+    DevolucionesApp class.
+    :param page: Page object.
+    :param main_menu_callback: Callback function to return to the main menu.
+    :return: None
+    """
     app = DevolucionesApp(page, main_menu_callback)
     app.listar_facturas()
 

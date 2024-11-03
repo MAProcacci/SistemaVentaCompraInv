@@ -8,7 +8,11 @@ from tkinter import messagebox
 
 # Función para mostrar un mensaje de error
 def mostrar_error(mensaje):
-    """Función para mostrar un mensaje de error en una ventana de Tkinter."""
+    """Función para mostrar un mensaje de error en una ventana de Tkinter.
+
+    Args:
+        mensaje (str): El mensaje de error a mostrar.
+    """
     root = tk.Tk()
     root.withdraw()  # Oculta la ventana principal
     messagebox.showerror("Error", mensaje)
@@ -16,6 +20,11 @@ def mostrar_error(mensaje):
 
 # Función para navegar por la ruta 'VCI'
 def navegar_ruta_vci():
+    """
+    Esta función busca la ruta 'VCI' en las unidades disponibles (C, D, E) y, si la encuentra,
+    cambia al directorio correspondiente.
+    :return: None
+    """
     # Lista de unidades a verificar
     unidades = ['C', 'D', 'E']
     ruta_vci = None  # Aquí se almacenará la ruta válida encontrada

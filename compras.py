@@ -8,6 +8,9 @@ from libreria import BaseApp, FormField
 
 
 class ComprasApp(BaseApp):
+    """
+    Clase que representa la aplicación de compras.
+    """
     def __init__(self, page: ft.Page, main_menu_callback):
         super().__init__(page, main_menu_callback)
         self.proveedor_field = ft.TextField(label="Proveedor",
@@ -21,24 +24,37 @@ class ComprasApp(BaseApp):
         self.total_compra: float = 0
 
     def listar_proveedores(self):
+        """
+        Muestra una lista de proveedores en la aplicación.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Proveedores")
             proveedores = cursor.fetchall()
 
         def filtrar_proveedores(e):
+            """
+            Filtra la lista de proveedores según el texto ingresado en el campo de filtro.
+            """
             filtro = filtro_field.value.lower()
             proveedores_filtrados = [proveedor for proveedor in proveedores if
                                      filtro in str(proveedor[0]).lower() or filtro in proveedor[1].lower()]
             actualizar_lista_proveedores(proveedores_filtrados)
 
         def seleccionar_proveedor(e):
+            """
+            Selecciona un proveedor de la lista y actualiza el campo de proveedor en la aplicación.
+            """
             proveedor_id, proveedor_nombre = e.control.data
             self.proveedor_field.value = f"{proveedor_id} - {proveedor_nombre}"
             self.page.update()
             self.main_menu()
 
         def actualizar_lista_proveedores(proveedores_filtrados):
+            """
+            Actualiza la lista de proveedores en la aplicación.
+            :param proveedores_filtrados: Lista de proveedores filtrados.
+            """
             proveedor_list.controls.clear()
             for proveedor in proveedores_filtrados:
                 proveedor_list.controls.append(
@@ -84,6 +100,9 @@ class ComprasApp(BaseApp):
         self.page.update()
 
     def listar_productos(self):
+        """
+        Muestra una lista de productos en la aplicación.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Productos")
@@ -101,12 +120,18 @@ class ComprasApp(BaseApp):
                 productos[i] += (precio_costo[0] if precio_costo else None,)
 
         def filtrar_productos(e):
+            """
+            Filtra la lista de productos según el texto ingresado en el campo de filtro.
+            """
             filtro = filtro_field.value.lower()
             productos_filtrados = [producto for producto in productos if
                                    filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
             actualizar_lista_productos(productos_filtrados)
 
         def agregar_al_carrito(e):
+            """
+            Agrega un producto al carrito de compras.
+            """
             # Asegúrate de que e.control.data contiene los 6 valores esperados
             producto_id, producto_nombre, _, _, _, ultimo_precio_costo = e.control.data
 
@@ -140,6 +165,10 @@ class ComprasApp(BaseApp):
             self.actualizar_vista_carrito()
 
         def actualizar_lista_productos(productos_filtrados):
+            """
+            Actualiza la lista de productos en la vista.
+            :param productos_filtrados: Lista de productos filtrados.
+            """
             producto_list.controls.clear()
             for producto in productos_filtrados:
                 ultimo_precio_costo = producto[5] if producto[5] is not None else "N/A"
@@ -186,6 +215,10 @@ class ComprasApp(BaseApp):
         self.page.update()
 
     def actualizar_carrito(self) -> Tuple[ft.ListView, ft.Text]:
+        """
+        Actualiza la vista del carrito de compras.
+        :return: Una tupla que contiene la vista del carrito y el texto que muestra el total de la compra.
+        """
         carrito_container = ft.ListView(expand=True, spacing=10, auto_scroll=True)
         for index, item in enumerate(self.carrito):
             producto_id, producto_nombre, cantidad, precio_costo = item
@@ -205,6 +238,12 @@ class ComprasApp(BaseApp):
         return carrito_container, total_text
 
     def modificar_cantidad(self, e, index: int):
+        """
+        Modifica la cantidad de un producto en el carrito.
+        :param e: Evento de cambio en el campo de cantidad.
+        :param index: Índice del producto en el carrito.
+        :return: None
+        """
         try:
             nueva_cantidad = int(e.control.value)
             if nueva_cantidad <= 0:
@@ -219,6 +258,12 @@ class ComprasApp(BaseApp):
             self.page.update()
 
     def modificar_precio_costo(self, e, index: int):
+        """
+        Modifica el precio de costo de un producto en el carrito.
+        :param e: Evento de cambio en el campo de precio de costo.
+        :param index: Índice del producto en el carrito.
+        :return: None
+        """
         try:
             nuevo_precio_costo = float(e.control.value)
             if nuevo_precio_costo <= 0:
@@ -233,16 +278,31 @@ class ComprasApp(BaseApp):
             self.page.update()
 
     def eliminar_producto(self, index: int):
+        """
+        Elimina un producto del carrito.
+        :param index: Índice del producto en el carrito.
+        :return: None
+        """
         del self.carrito[index]
         self.actualizar_total()
         self.actualizar_vista_carrito()
 
     def editar_producto(self, index: int):
+        """
+        Edita un producto en el carrito.
+        :param index: Índice del producto en el carrito.
+        :return: None
+        """
         producto_id, producto_nombre, cantidad, precio_costo = self.carrito[index]
         cantidad_field = ft.TextField(label="Nueva Cantidad", value=str(cantidad), width=100)
         precio_costo_field = ft.TextField(label="Nuevo Precio Costo", value=str(precio_costo), width=100)
 
         def guardar_cambios(_):
+            """
+            Guarda los cambios realizados en el producto.
+            :param _: Evento de clic en el botón de guardar cambios.
+            :return: None
+            """
             try:
                 nueva_cantidad = int(cantidad_field.value)
                 nuevo_precio_costo = float(precio_costo_field.value)
@@ -270,9 +330,17 @@ class ComprasApp(BaseApp):
         self.page.update()
 
     def actualizar_total(self):
+        """
+        Actualiza el total de la compra.
+        :return: None
+        """
         self.total_compra = sum(item[2] * item[3] for item in self.carrito)
 
     def actualizar_vista_carrito(self):
+        """
+        Actualiza la vista del carrito.
+        :return: None
+        """
         carrito_container, total_text = self.actualizar_carrito()
         for control in self.page.controls[:]:
             if isinstance(control, ft.ListView) and control.data == "carrito_container":
@@ -286,7 +354,16 @@ class ComprasApp(BaseApp):
         self.page.update()
 
     def main_menu(self):
+        """
+        Muestra el menú principal.
+        :return: None
+        """
         def finalizar_compra(_):
+            """
+            Finaliza la compra.
+            :param _: Evento de clic en el botón de finalizar compra.
+            :return: None
+            """
             if not self.proveedor_field.value or not self.carrito:
                 self.mostrar_mensaje("Error: Seleccione un proveedor y al menos un producto", "red")
                 return
@@ -361,6 +438,12 @@ class ComprasApp(BaseApp):
 
 
 def compras_app(page: ft.Page, main_menu_callback):
+    """
+    Funcion principal de la aplicacion
+    :param page: Pagina de la aplicacion
+    :param main_menu_callback: Callback para volver al menú principal
+    :return: None
+    """
     app = ComprasApp(page, main_menu_callback)
     app.main_menu()
 

@@ -19,6 +19,10 @@ COLOR_SNACKBAR = "white"
 COLOR_ERROR = "red"
 
 def leer_taza_interes(main_app_instance):
+    """
+    Lee la taza de interés del Impuesto desde un archivo de texto.
+    Args:
+        main_app_instance (MainApp): Instancia de la aplicación."""
     try:
         with open('taza_impuesto.txt', 'r') as archivo:
             contenido = archivo.read().strip()
@@ -34,6 +38,9 @@ def leer_taza_interes(main_app_instance):
         return None
 
 class VentasApp(BaseApp):
+    """
+    Clase que representa la ventas de la aplicación.
+    """
     def __init__(self, page: ft.Page, main_menu_callback):
         super().__init__(page, main_menu_callback)
         self.cliente_field = ft.TextField(label="Cliente",
@@ -47,23 +54,38 @@ class VentasApp(BaseApp):
         self.total_venta: float = 0
 
     def listar_clientes(self):
+        """
+        Muestra la lista de clientes.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Clientes")
             clientes = cursor.fetchall()
 
         def filtrar_clientes(e):
+            """
+            Filtra la lista de clientes por el texto introducido en el campo de búsqueda.
+            """
             filtro = filtro_field.value.lower()
             clientes_filtrados = [cliente for cliente in clientes if filtro in str(cliente[0]).lower() or filtro in cliente[1].lower()]
             actualizar_lista_clientes(clientes_filtrados)
 
         def seleccionar_cliente(e):
+            """
+            Selecciona un cliente de la lista de clientes y actualiza el campo de texto con
+            los datos del cliente seleccionado.
+            """
             cliente_id, cliente_nombre = e.control.data
             self.cliente_field.value = f"{cliente_id} - {cliente_nombre}"
             self.page.update()
             self.main_menu()
 
         def actualizar_lista_clientes(clientes_filtrados):
+            """
+            Actualiza la lista de clientes mostrada en la pantalla.
+            Args:
+                clientes_filtrados (list): Lista de clientes filtrados.
+            """
             cliente_list.controls.clear()
             for cliente in clientes_filtrados:
                 cliente_list.controls.append(
@@ -108,17 +130,27 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def listar_productos(self):
+        """
+        Muestra la lista de productos.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Productos")
             productos = cursor.fetchall()
 
         def filtrar_productos(e):
+            """
+            Filtra la lista de productos por el texto introducido en el campo de búsqueda.
+            """
             filtro = filtro_field.value.lower()
             productos_filtrados = [producto for producto in productos if filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
             actualizar_lista_productos(productos_filtrados)
 
         def agregar_al_carrito(e):
+            """
+            Agrega el producto seleccionado al carrito y actualiza el campo de texto con
+            los datos del producto seleccionado.
+            """
             producto_id, producto_nombre, producto_precio = e.control.data
 
             # Asegúrate de que estás capturando el campo de cantidad correctamente
@@ -160,6 +192,11 @@ class VentasApp(BaseApp):
             self.actualizar_vista_carrito()
 
         def actualizar_lista_productos(productos_filtrados):
+            """
+            Actualiza la lista de productos en la vista.
+            Args:
+                productos_filtrados (list): Lista de productos filtrados.
+                """
             producto_list.controls.clear()
             for producto in productos_filtrados:
                 producto_row = ft.Row([
@@ -201,6 +238,9 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def actualizar_carrito(self) -> Tuple[ft.ListView, ft.Text]:
+        """
+        Actualiza la vista del carrito y devuelve un par (carrito_container, total_text).
+        """
         carrito_container = ft.ListView(expand=True, spacing=10)
         for index, item in enumerate(self.carrito):
             producto_id, producto_nombre, cantidad, precio = item
@@ -218,6 +258,11 @@ class VentasApp(BaseApp):
         return carrito_container, total_text
 
     def modificar_cantidad(self, e, index: int):
+        """
+        Modifica la cantidad del producto en el carrito y actualiza el total de la venta.
+        Args:
+            e (ft.ChangeEvent): Evento de cambio en el campo de texto.
+            index (int): Indice del producto en el carrito."""
         try:
             nueva_cantidad = int(e.control.value)
             if nueva_cantidad <= 0:
@@ -232,15 +277,28 @@ class VentasApp(BaseApp):
             self.page.update()
 
     def eliminar_producto(self, index: int):
+        """
+        Elimina el producto del carrito y actualiza el total de la venta.
+        Args:
+            index (int): Indice del producto en el carrito.
+        """
         del self.carrito[index]
         self.actualizar_total()
         self.actualizar_vista_carrito()
 
     def editar_producto(self, index: int):
+        """
+        Edita la cantidad del producto en el carrito.
+        Args:
+            index (int): Indice del producto en el carrito.
+        """
         producto_id, producto_nombre, cantidad, precio = self.carrito[index]
         cantidad_field = ft.TextField(label="Nueva Cantidad", value=str(cantidad), width=100)
 
         def guardar_cambios(_):
+            """
+            Guarda los cambios en la cantidad del producto en el carrito y actualiza el total de la venta.
+            """
             try:
                 nueva_cantidad = int(cantidad_field.value)
                 if nueva_cantidad <= 0:
@@ -266,9 +324,16 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def actualizar_total(self):
+        """
+        Actualiza el total de la venta en función de los precios y cantidades de los productos
+        en el carrito.
+        """
         self.total_venta = sum(item[2] * item[3] for item in self.carrito)
 
     def actualizar_vista_carrito(self):
+        """
+        Actualiza la vista del carrito y agrega el total de la venta.
+        """
         carrito_container, total_text = self.actualizar_carrito()
         for control in self.page.controls[:]:
             if isinstance(control, ft.ListView) and control.data == "carrito_container":
@@ -282,7 +347,13 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def main_menu(self):
+        """
+        Limpia la vista y agrega los botones de la menú principal.
+        """
         def finalizar_venta(_):
+            """
+            Finaliza la venta y muestra el menú principal.
+            """
             if not self.cliente_field.value or not self.carrito:
                 self.mostrar_mensaje("Error: Seleccione un cliente y al menos un producto", "red")
                 return
@@ -360,6 +431,11 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def generar_numero_factura(self) -> str:
+        """
+        Genera el número de factura siguiente disponible.
+
+        :return: Número de factura como cadena de caracteres.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT MAX(factura_id) FROM Ventas")
@@ -374,6 +450,14 @@ class VentasApp(BaseApp):
                 return "00000001"
 
     def generar_factura_pdf(self, factura_id: str, cliente_id: int, fecha: str, descuento_porcentaje: float):
+        """
+        Genera un PDF con la información de la venta.
+
+        :param factura_id: ID de la factura.
+        :param cliente_id: ID del cliente.
+        :param fecha: Fecha de la venta.
+        :param descuento_porcentaje: Porcentaje de descuento aplicado.
+        """
         ruta_facturas = os.path.join(os.getcwd(), FACTURA_DIR)
         os.makedirs(ruta_facturas, exist_ok=True)
         ruta_factura = os.path.join(ruta_facturas, f'factura_{factura_id}.pdf')
@@ -474,12 +558,23 @@ class VentasApp(BaseApp):
         self.mostrar_confirmacion_imprimir(ruta_factura)
 
     def mostrar_confirmacion_imprimir(self, ruta_pdf: str):
+        """
+        Imprime la factura en el dispositivo de impresión predeterminado.
+
+        :param ruta_pdf: Ruta al archivo PDF de la factura.
+        """
         def imprimir(_):
+            """
+            Imprime la factura en el dispositivo de impresión predeterminado.
+            """
             self.imprimir_pdf(ruta_pdf)
             self.page.dialog.open = False
             self.page.update()
 
         def cancelar(_):
+            """
+            Cancela la impresión y cierra el diálogo.
+            """
             self.page.dialog.open = False
             self.page.update()
 
@@ -498,6 +593,11 @@ class VentasApp(BaseApp):
         self.page.update()
 
     def imprimir_pdf(self, ruta_pdf: str):
+        """
+        Imprime el archivo PDF en el dispositivo de impresión predeterminado.
+
+        :param ruta_pdf: Ruta al archivo PDF de la factura.
+        """
         try:
             if os.name == 'nt':  # Windows
                 sumatra_path = r"C:\Users\Owner\AppData\Local\SumatraPDF\SumatraPDF.exe"
@@ -514,6 +614,11 @@ class VentasApp(BaseApp):
             self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
 
     def guardar_error(self, mensaje_error: str):
+        """
+        Guarda el error en un archivo de texto.
+
+        :param mensaje_error: Mensaje del error.
+        """
         ruta_errores = os.path.join(os.getcwd(), ERROR_DIR)
         os.makedirs(ruta_errores, exist_ok=True)
 
@@ -525,5 +630,11 @@ class VentasApp(BaseApp):
             archivo.write(mensaje_error)
 
 def ventas_app(page: ft.Page, main_menu_callback):
+    """
+    Crea la interfaz de usuario de la aplicación de ventas.
+
+    :param page: Página de la interfaz de usuario.
+    :param main_menu_callback: Función que se ejecuta al seleccionar el menú principal.
+    """
     app = VentasApp(page, main_menu_callback)
     app.main_menu()

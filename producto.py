@@ -7,6 +7,9 @@ from libreria import BLUE_COLOR, RED_COLOR, HEADER_SIZE, BUTTON_TEXT_SIZE, COLOR
 import time
 
 class ProductoApp(BaseApp):
+    """
+    Clase que representa la app para administrar productos.
+    """
     def __init__(self, page: ft.Page, main_menu_callback: Callable[[], None]):
         super().__init__(page, main_menu_callback)
 
@@ -19,11 +22,18 @@ class ProductoApp(BaseApp):
         lista_productos = ft.Column(scroll=ft.ScrollMode.AUTO, expand=True, spacing=10)
 
         def filtrar_productos(e):
+            """
+            Filtra los productos según el filtro ingresado.
+            """
             filtro = filtro_field.value.lower()
             productos_filtrados = [producto for producto in productos if filtro in str(producto[0]).lower() or filtro in producto[1].lower()]
             actualizar_lista_productos(productos_filtrados)
 
         def actualizar_lista_productos(productos_filtrados):
+            """
+            Actualiza la lista de productos en la interfaz gráfica.
+             :param productos_filtrados: Lista de productos filtrados.
+             """
             lista_productos.controls.clear()
             for producto in productos_filtrados:
                 lista_productos.controls.append(self._crear_boton_producto(producto))
@@ -56,11 +66,16 @@ class ProductoApp(BaseApp):
             return cursor.fetchall()
 
     def _crear_boton_producto(self, producto: Tuple) -> ft.ElevatedButton:
-        """Crea un botón con la información del producto."""
+        """Crea un botón con la información del producto.
+         :param producto: Tupla con los datos del producto (id, nombre, descripcion, precio, stock).
+         :return: Botón con la información del producto.
+         """
         return self._crear_boton_entidad(producto, "Producto", lambda _: self.consultar_producto(producto[0]))
 
     def consultar_producto(self, producto_id: int) -> None:
-        """Consulta los detalles de un producto específico."""
+        """Consulta los detalles de un producto específico.
+         :param producto_id: ID del producto a consultar.
+         """
         producto = self._obtener_producto(producto_id)
         self.page.controls.clear()
         self.page.add(
@@ -86,14 +101,19 @@ class ProductoApp(BaseApp):
         self.page.update()
 
     def _obtener_producto(self, producto_id: int) -> Tuple:
-        """Obtiene los detalles de un producto específico desde la base de datos."""
+        """Obtiene los detalles de un producto específico desde la base de datos.
+         :param producto_id: ID del producto a consultar.
+         :return: Tupla con los datos del producto (id, nombre, descripcion, precio, stock).
+         """
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Productos WHERE id=?", (producto_id,))
             return cursor.fetchone()
 
     def modificar(self, producto: Tuple) -> None:
-        """Muestra la interfaz para modificar un producto existente."""
+        """Muestra la interfaz para modificar un producto existente.
+         :param producto: Tupla con los datos del producto (id, nombre, descripcion, precio, stock).
+         """
         campos = [
             FormField("Nombre", producto[1]),
             FormField("Descripción", producto[2]),
@@ -103,7 +123,10 @@ class ProductoApp(BaseApp):
         self._mostrar_formulario_entidad(producto, "Producto", campos, self._guardar_producto)
 
     def _guardar_producto(self, fields: List[ft.TextField], producto: Tuple) -> None:
-        """Guarda un producto en la base de datos."""
+        """Guarda un producto en la base de datos.
+         :param fields: Lista de campos del formulario.
+         :param producto: Tupla con los datos del producto a modificar (id, nombre, descripcion, precio, stock).
+         """
         nombre, descripcion, precio, stock = [field.value for field in fields]
         self._validar_campos(fields)
         try:
@@ -118,7 +141,9 @@ class ProductoApp(BaseApp):
             self.mostrar_mensaje(f"Error inesperado: {str(e)}", RED_COLOR)
 
     def eliminar(self, producto_id: int) -> None:
-        """Elimina un producto de la base de datos."""
+        """Elimina un producto de la base de datos.
+         :param producto_id: ID del producto a eliminar.
+         """
         if self._producto_tiene_ventas(producto_id):
             self.mostrar_mensaje("El producto seleccionado tiene ventas registradas y no se puede eliminar", RED_COLOR)
             time.sleep(2)
@@ -129,7 +154,9 @@ class ProductoApp(BaseApp):
             self.main_menu_callback()
 
     def _producto_tiene_ventas(self, producto_id: int) -> bool:
-        """Verifica si un producto tiene ventas registradas."""
+        """Verifica si un producto tiene ventas registradas.
+         :param producto_id: ID del producto a verificar.
+         :return: True si el producto tiene ventas, False si no."""
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT COUNT(*) FROM Ventas WHERE producto_id=?", (producto_id,))
@@ -157,7 +184,11 @@ class ProductoApp(BaseApp):
         self.page.update()
 
 def producto_app(page: ft.Page, main_menu_callback: Callable[[], None]) -> None:
-    """Función principal que inicializa la aplicación de gestión de productos."""
+    """Función principal que inicializa la aplicación de gestión de productos.
+     Args:
+         page (ft.Page): La página principal de la aplicación.
+         main_menu_callback (Callable[[], None]): Callback para volver al menú principal.
+         """
     app = ProductoApp(page, main_menu_callback)
     app.main_menu()
 

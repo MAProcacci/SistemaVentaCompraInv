@@ -31,7 +31,13 @@ def get_db_connection():
 
 def _crear_menu_fila(text1: str, on_click1: Callable,
                      text2: str, on_click2: Callable) -> ft.Row:
-    """Crea una fila de botones para el menú principal."""
+    """Crea una fila de botones de 2 columnaspara el menú en 'Flet'.
+    Args:
+        text1 (str): Texto del botón 1.
+        on_click1 (Callable): Función que se llama cuando se hace click en el botón 1.
+        text2 (str): Texto del botón 2.
+        on_click2 (Callable): Función que se llama cuando se hace click en el botón 2.
+        """
     return ft.Row([
         ft.ElevatedButton(text1, on_click=on_click1),
         ft.Divider(height=20, color="transparent"),

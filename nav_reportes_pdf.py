@@ -6,6 +6,9 @@ import platform
 from libreria import BaseApp
 
 class NavReportesPDF(BaseApp):
+    """
+    Clase para la navegación de reportes PDF.
+    """
     def __init__(self, page: ft.Page, reportes_dir: str, main_menu_callback: callable):
         super().__init__(page, main_menu_callback)
         self.reportes_dir = reportes_dir
@@ -13,10 +16,19 @@ class NavReportesPDF(BaseApp):
         self.selected_report = None
 
     def cargar_reportes(self):
+        """
+        Carga los reportes PDF disponibles en el directorio especificado.
+        :return: None
+        """
         self.reportes = [f for f in os.listdir(self.reportes_dir) if f.endswith('.pdf')]
         self.mostrar_reportes()
 
     def mostrar_reportes(self, e=None):
+        """
+        Muestra los reportes PDF disponibles en una lista.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(ft.Text("Reportes PDF", size=24, text_align=ft.TextAlign.CENTER))
         self.page.add(ft.Divider(height=20, color="transparent"))
@@ -34,10 +46,20 @@ class NavReportesPDF(BaseApp):
         self.page.update()
 
     def seleccionar_reporte(self, reporte: str):
+        """
+        Selecciona un reporte PDF para mostrar sus opciones.
+        :param reporte: Nombre del reporte PDF.
+        :return: None
+        """
         self.selected_report = reporte
         self.mostrar_opciones()
 
     def mostrar_opciones(self, e=None):
+        """
+        Muestra las opciones disponibles para el reporte seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(ft.Text(f"Opciones para: {self.selected_report}", size=24, text_align=ft.TextAlign.CENTER))
         self.page.add(ft.Divider(height=20, color="transparent"))
@@ -49,12 +71,25 @@ class NavReportesPDF(BaseApp):
         self.page.update()
 
     def confirmar_eliminar(self, e):
+        """
+        Confirma la eliminación del reporte seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         def eliminar(_):
+            """
+            Confirma la eliminación del reporte seleccionado.
+            :return: None
+            """
             self.eliminar_reporte()
             self.page.dialog.open = False
             self.page.update()
 
         def cancelar(_):
+            """
+            Cancela la eliminación del reporte seleccionado.
+            :return: None
+            """
             self.page.dialog.open = False
             self.page.update()
 
@@ -73,6 +108,10 @@ class NavReportesPDF(BaseApp):
         self.page.update()
 
     def eliminar_reporte(self):
+        """
+        Elimina el reporte seleccionado.
+        :return: None
+        """
         if self.selected_report:
             ruta_reporte = os.path.join(self.reportes_dir, self.selected_report)
             os.remove(ruta_reporte)
@@ -82,6 +121,11 @@ class NavReportesPDF(BaseApp):
             self.mostrar_reportes()
 
     def ver_reporte(self, e):
+        """
+        Ver el reporte seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         if self.selected_report:
             ruta_reporte = os.path.join(self.reportes_dir, self.selected_report)
             try:
@@ -94,6 +138,11 @@ class NavReportesPDF(BaseApp):
                 self.mostrar_mensaje(f"Error al abrir el reporte: {str(e)}", "red")
 
     def imprimir_reporte(self, e):
+        """
+        Imprimir el reporte seleccionado.
+        :param e: Evento de cambio de estado.
+        :return: None
+        """
         if self.selected_report:
             ruta_reporte = os.path.join(self.reportes_dir, self.selected_report)
             try:
@@ -111,5 +160,12 @@ class NavReportesPDF(BaseApp):
                 self.mostrar_mensaje(f"Error al imprimir: {str(e)}", "red")
 
 def nav_reportes_pdf_app(page: ft.Page, reportes_dir: str, main_menu_callback: callable):
+    """
+    Crea una instancia de la aplicación de navegación de reportes PDF.
+    :param page: Página de la aplicación.
+    :param reportes_dir: Directorio donde se almacenan los reportes.
+    :param main_menu_callback: Función de devolución de llamada para volver al menú principal.
+    :return: None
+    """
     app = NavReportesPDF(page, reportes_dir, main_menu_callback)
     app.cargar_reportes()

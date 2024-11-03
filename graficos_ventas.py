@@ -20,11 +20,20 @@ ALTO_GRAFICO = 600
 COLOR_SNACKBAR = "white"
 
 class GraficosVentas:
+    """
+    Clase para generar gráficos de ventas acumuladas.
+    """
     def __init__(self, page: ft.Page, main_menu_callback: Callable[[], None]):
         self.page = page
         self.main_menu_callback = main_menu_callback
 
     def generar_grafico_ventas_acumuladas(self, desde: str, hasta: str) -> str:
+        """
+        Genera un gráfico de ventas acumuladas.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :return: La ruta del archivo PDF generado.
+        """
         with create_connection() as conn:
             cursor = conn.cursor()
             query = """
@@ -60,6 +69,14 @@ class GraficosVentas:
         return image_base64
 
     def generar_pdf(self, image_base64: str, desde: str, hasta: str, orientation: str = 'portrait'):
+        """
+        Genera un archivo PDF con el gráfico de ventas acumuladas.
+        :param image_base64: La imagen en formato base64.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :param orientation: Orientación del PDF ('portrait' o 'landscape').
+        :return: La ruta del archivo PDF generado.
+        """
         pdf_dir = os.path.join(os.getcwd(), 'Graficos_PDF')
         os.makedirs(pdf_dir, exist_ok=True)
         pdf_path = os.path.join(pdf_dir, f'top_25_ventas_{desde}_{hasta}.pdf')
@@ -89,13 +106,26 @@ class GraficosVentas:
         return pdf_path
 
     def mostrar_grafico(self, desde: str, hasta: str):
+        """
+        Muestra el gráfico de ventas acumuladas en la interfaz de usuario.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        """
         image_base64 = self.generar_grafico_ventas_acumuladas(desde, hasta)
 
         def close_dlg(_):
+            """
+            Cierra el diálogo de alerta.
+            :return: None
+            """
             dlg.open = False
             self.page.update()
 
         def generar_pdf_grafico(_):
+            """
+            Genera un archivo PDF con el gráfico de ventas acumuladas.
+            :return: None
+            """
             pdf_path = self.generar_pdf(image_base64, desde, hasta, orientation='landscape')
             self.mostrar_mensaje(f"PDF generado en: {pdf_path}")
 
@@ -122,12 +152,21 @@ class GraficosVentas:
         self.page.update()
 
     def abrir_calendario(self, campo_fecha: ft.TextField):
+        """
+        Abre el calendario para seleccionar una fecha.
+        :param campo_fecha: El campo de texto donde se mostrará la fecha seleccionada.
+        :return: None
+        """
         date_picker = ft.DatePicker(
             first_date=datetime(2020, 1, 1),
             last_date=datetime(2030, 12, 31)
         )
 
         def on_change(_):
+            """
+            Si se selecciona una fecha, se muestra en el campo de texto.
+            :return: None
+            """
             if date_picker.value:
                 campo_fecha.value = date_picker.value.strftime(FORMATO_FECHA)
                 self.page.update()
@@ -139,12 +178,20 @@ class GraficosVentas:
         self.page.update()
 
     def open_ventas_acumuladas(self):
+        """
+        Abre la ventana de ventas acumuladas.
+        :return: None
+        """
         desde_field = ft.TextField(label="Desde", hint_text=FORMATO_FECHA,
                                    value=datetime.today().strftime(FORMATO_FECHA))
         hasta_field = ft.TextField(label="Hasta", hint_text=FORMATO_FECHA,
                                    value=datetime.today().strftime(FORMATO_FECHA))
 
         def generar_grafico(_):
+            """
+            Genera el gráfico de ventas acumuladas.
+            :return: None
+            """
             desde = desde_field.value
             hasta = hasta_field.value
 
@@ -174,6 +221,10 @@ class GraficosVentas:
         self.page.update()
 
     def main_menu(self):
+        """
+        Muestra el menú principal de gráficos.
+        :return: None
+        """
         self.page.controls.clear()
         self.page.add(
             ft.Text(TITULO_VENTAS_ACUMULADAS, size=24),
@@ -183,6 +234,12 @@ class GraficosVentas:
         self.page.update()
 
     def crear_fila_fecha(self, campo_fecha: ft.TextField, etiqueta: str) -> ft.Row:
+        """
+        Crea una fila con un campo de texto para ingresar una fecha y un botón para abrir el calendario.
+        :param campo_fecha: El campo de texto donde se mostrará la fecha seleccionada.
+        :param etiqueta: La etiqueta que se mostrará junto al campo de texto.
+        :return: La fila con el campo de texto y el botón para abrir el calendario.
+        """
         return ft.Row([
             campo_fecha,
             ft.ElevatedButton(
@@ -193,15 +250,32 @@ class GraficosVentas:
         ], alignment=ft.MainAxisAlignment.CENTER)
 
     def mostrar_error(self, mensaje: str):
+        """
+        Muestra un mensaje de error en la ventana.
+        :param mensaje: El mensaje de error a mostrar.
+        :return: None
+        """
         self.page.snack_bar = ft.SnackBar(ft.Text(mensaje), bgcolor=COLOR_SNACKBAR)
         self.page.snack_bar.open = True
         self.page.update()
 
     def mostrar_mensaje(self, mensaje: str):
+        """
+        Muestra un mensaje en la ventana.
+        :param mensaje: El mensaje a mostrar.
+        :return: None
+        """
         self.page.snack_bar = ft.SnackBar(ft.Text(mensaje, weight=ft.FontWeight.BOLD), bgcolor=COLOR_SNACKBAR)
         self.page.snack_bar.open = True
         self.page.update()
 
 def graficos_ventas_app(page: ft.Page, main_menu_callback: Callable[[], None]):
+    """
+    Funcion principal de la aplicacion de graficos de ventas
+    :param page: La pagina de la aplicacion
+    :param main_menu_callback: La funcion que se ejecutara cuando se seleccione el boton de volver al
+                                menu principal
+    :return: None
+    """
     app = GraficosVentas(page, main_menu_callback)
     app.open_ventas_acumuladas()

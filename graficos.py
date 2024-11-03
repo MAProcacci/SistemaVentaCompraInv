@@ -16,41 +16,72 @@ TITULO_GRAFICOS = "Gráficos"
 COLOR_SNACKBAR = "white"
 
 class GraficosApp:
+    """
+    Clase para la aplicación de gráficos.
+    """
     def __init__(self, page: ft.Page, main_menu_callback: Callable[[], None]):
         self.page = page
         self.graficos_dir_pdf = os.path.join(os.getcwd(), 'Graficos_PDF')
         self.main_menu_callback = main_menu_callback
 
     def main_menu(self):
+        """
+        Muestra el menú principal de la aplicación.
+        :return: None
+        """
         def open_ventas_acumuladas(_):
+            """
+            Abre la interfaz de gráficos de ventas acumuladas por producto (Top 25)
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graficos_ventas_app(self.page, lambda: self.main_menu())
 
         def open_ventas_acumuladas_clientes(_):
+            """
+            Abre la interfaz de gráficos de ventas acumuladas por cliente (Top 25)
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graficos_clientes_app(self.page, lambda: self.main_menu())
 
         def open_ventas_diarias(_):
+            """
+            Abre la interfaz de gráficos de ventas diarias
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             grafico_ventas_diarias_app(self.page, lambda: self.main_menu())
 
         def open_devoluciones_clientes(_):
+            """
+            Abre la interfaz de gráficos de devoluciones por cliente
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graf_devoluciones_clientes_app(self.page, lambda: self.main_menu())
 
         def open_devoluciones_productos(_):
+            """
+            Abre la interfaz de gráficos de devoluciones por producto
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graf_devoluciones_productos_app(self.page, lambda: self.main_menu())
 
         def open_compras_proveedores(_):
+            """
+            Abre la interfaz de gráficos de compras por proveedor
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graf_comp_provee_app(self.page, lambda: self.main_menu())
 
         def open_compras_productos(_):
+            """
+            Abre la interfaz de gráficos de compras por producto
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             graf_comp_producto_app(self.page, lambda: self.main_menu())
 
         def open_nav_graficos_pdf(_):
+            """
+            Abre la interfaz de navegación de gráficos en PDF
+            """
             self.page.controls.clear()  # Limpiar los controles actuales
             nav_graficos_pdf_app(self.page, lambda: self.main_menu())
 
@@ -70,10 +101,20 @@ class GraficosApp:
         self.page.update()
 
     def nav_graficos_pdf(self):
+        """
+        Abre la interfaz de navegación de gráficos en PDF.
+        :return: None
+        """
         #from nav_reportes_pdf import nav_reportes_pdf_app
         nav_graficos_pdf_app(self.page, self.graficos_dir_pdf, self.main_menu_callback)
 
 def graficos_app(page: ft.Page, main_menu_callback: Callable[[], None]):
+    """
+    Crea una instancia de la aplicación de gráficos y la ejecuta.
+    :param page: La página de la aplicación.
+    :param main_menu_callback: La función de devolución de llamada para volver al menú principal.
+    :return: None
+    """
     app = GraficosApp(page, main_menu_callback)
     app.main_menu()
 
