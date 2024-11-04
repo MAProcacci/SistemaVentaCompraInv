@@ -3,10 +3,15 @@ import flet as ft
 from typing import Callable, List, Tuple, Optional, Any
 from contextlib import contextmanager
 from database import create_connection
-import time
-from functools import partial
 from dataclasses import dataclass
 from datetime import datetime
+import matplotlib.pyplot as plt
+import io
+import base64
+import os
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Image
 
 # Constantes
 BLUE_COLOR = "blue"
@@ -14,6 +19,9 @@ RED_COLOR = "red"
 HEADER_SIZE = 24
 BUTTON_TEXT_SIZE = 16
 COLOR_SNACKBAR = "white"
+FORMATO_FECHA = '%Y-%m-%d'
+ANCHO_GRAFICO = 800
+ALTO_GRAFICO = 600
 
 @contextmanager
 def get_db_connection():
@@ -31,7 +39,7 @@ def get_db_connection():
 
 def _crear_menu_fila(text1: str, on_click1: Callable,
                      text2: str, on_click2: Callable) -> ft.Row:
-    """Crea una fila de botones de 2 columnaspara el menú en 'Flet'.
+    """Crea una fila de botones de 2 columnas para el menú en 'Flet'.
     Args:
         text1 (str): Texto del botón 1.
         on_click1 (Callable): Función que se llama cuando se hace click en el botón 1.
@@ -247,6 +255,202 @@ class BaseApp:
                 raise ValueError("La fecha 'Hasta' no puede ser menor que la fecha 'Desde'.")
             return True
         except ValueError as e:
-            self.mostrar_mensaje(f"Error: {str(e)}")
+            self.mostrar_mensaje(f"Error: {str(e)}", RED_COLOR)
             return False
 
+    def generar_grafico_devoluciones(self, desde: str, hasta: str, titulo: str, query: str, color: str) -> str:
+        """
+        Genera un gráfico de devoluciones y lo guarda en un archivo PDF.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :param titulo: Título del gráfico.
+        :param query: Consulta SQL para obtener los datos.
+        :param color: Color del gráfico.
+        :return: La imagen del gráfico en formato base64.
+        """
+        with create_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (desde, hasta))
+            devoluciones = cursor.fetchall()
+
+        nombres = [dev[0] for dev in devoluciones]
+        totales = [dev[1] for dev in devoluciones]
+
+        plt.switch_backend('Agg')
+        plt.figure(figsize=(12, 6))
+        plt.bar(nombres, totales, color=color)
+        plt.xlabel('Nombres')
+        plt.ylabel('Total Devoluciones ($)')
+        plt.title(f'{titulo} ({desde} - {hasta})')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png')
+        buffer.seek(0)
+        image_base64 = base64.b64encode(buffer.getvalue()).decode()
+        plt.close()
+
+        return image_base64
+
+    def generar_pdf(self, image_base64: str, desde: str, hasta: str, titulo: str, orientation: str = 'portrait'):
+        """
+        Genera un archivo PDF con el gráfico de devoluciones.
+        :param image_base64: La imagen del gráfico en formato base64.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :param titulo: Título del gráfico.
+        :param orientation: Orientación del PDF (portrait o landscape).
+        :return: La ruta del archivo PDF generado.
+        """
+        pdf_dir = os.path.join(os.getcwd(), 'Graficos_PDF')
+        os.makedirs(pdf_dir, exist_ok=True)
+        if titulo == "Top 25 Productos con Más Compras":
+            titulo_archivo = "top_25_comp_prod"
+        elif titulo == "Top 25 Proveedores con Más Compras":
+            titulo_archivo = "top_25_comp_provee"
+        elif titulo == "Top 25 Productos con Más Devoluciones":
+            titulo_archivo = "top_25_devoluciones_productos"
+        elif titulo == "Top 25 Clientes con Más Devoluciones":
+            titulo_archivo = "top_25_devoluciones_clientes"
+        elif titulo == "Top 25 Productos con Más Ventas":
+            titulo_archivo = "top_25_ventas_producto"
+        elif titulo == "Top 25 Clientes con Más Ventas":
+            titulo_archivo = "top_25_ventas_clientes"
+
+        pdf_path = os.path.join(pdf_dir, f'{titulo_archivo.lower().replace(" ", "_")}_{desde}_{hasta}.pdf')
+
+        if orientation == 'landscape':
+            pagesize = landscape(letter)
+        else:
+            pagesize = letter
+
+        doc = SimpleDocTemplate(pdf_path, pagesize=pagesize)
+        styles = getSampleStyleSheet()
+        elements = []
+
+        # Título
+        elements.append(Paragraph(titulo, styles['Title']))
+
+        # Fecha de inicio y final
+        elements.append(Paragraph(f"Fecha Inicio: {desde}", styles['Normal']))
+        elements.append(Paragraph(f"Fecha Final: {hasta}", styles['Normal']))
+
+        # Imagen del gráfico
+        image_data = base64.b64decode(image_base64)
+        elements.append(Image(io.BytesIO(image_data), width=700, height=400))
+
+        doc.build(elements)
+
+        return pdf_path
+
+    def mostrar_grafico(self, desde: str, hasta: str, titulo: str, generar_grafico_callback: Callable, generar_pdf_callback: Callable):
+        """
+        Muestra el gráfico de devoluciones en una ventana emergente.
+        :param desde: Fecha de inicio del rango de fechas.
+        :param hasta: Fecha de fin del rango de fechas.
+        :param titulo: Título del gráfico.
+        :param generar_grafico_callback: Función de devolución de llamada para generar el gráfico.
+        :param generar_pdf_callback: Función de devolución de llamada para generar el PDF.
+        """
+        image_base64 = generar_grafico_callback(desde, hasta)
+
+        def close_dlg(_):
+            """
+            Cierra la ventana emergente.
+            """
+            dlg.open = False
+            self.page.update()
+
+        def generar_pdf_grafico(_):
+            """
+            Genera un archivo PDF con el gráfico de devoluciones.
+            """
+            pdf_path = generar_pdf_callback(image_base64, desde, hasta)
+            self.mostrar_mensaje(f"PDF generado en: {pdf_path}", BLUE_COLOR)
+
+        dlg = ft.AlertDialog(
+            title=ft.Text(titulo),
+            content=ft.Column([
+                ft.Row([
+                    ft.Text("Fecha Inicio:", weight=ft.FontWeight.BOLD, color="blue"),
+                    ft.Text(desde),
+                    ft.Text("Fecha Final:", weight=ft.FontWeight.BOLD, color="blue"),
+                    ft.Text(hasta)
+                ], alignment=ft.MainAxisAlignment.CENTER),
+                ft.Image(src_base64=image_base64, width=ANCHO_GRAFICO, height=ALTO_GRAFICO, fit=ft.ImageFit.CONTAIN)
+            ], scroll=ft.ScrollMode.AUTO),
+            actions=[
+                ft.TextButton("Cerrar", on_click=close_dlg),
+                ft.TextButton("Generar PDF", on_click=generar_pdf_grafico)
+            ],
+            actions_alignment=ft.MainAxisAlignment.END,
+        )
+
+        self.page.dialog = dlg
+        dlg.open = True
+        self.page.update()
+
+    def open_compras_o_devoluciones(self, titulo: str, query: str, color: str):
+        """
+        Abre la ventana de devoluciones.
+        :param titulo: Título del gráfico.
+        :param query: Consulta SQL para obtener los datos.
+        :param color: Color del gráfico.
+        :return: None
+        """
+        desde_field = ft.TextField(label="Desde", hint_text=FORMATO_FECHA,
+                                   value=datetime.today().strftime(FORMATO_FECHA))
+        hasta_field = ft.TextField(label="Hasta", hint_text=FORMATO_FECHA,
+                                   value=datetime.today().strftime(FORMATO_FECHA))
+
+        def generar_grafico(_):
+            """
+            Genera el gráfico de devoluciones.
+            :return: None
+            """
+            desde = desde_field.value
+            hasta = hasta_field.value
+
+            try:
+                desde_date = datetime.strptime(desde, FORMATO_FECHA)
+                hasta_date = datetime.strptime(hasta, FORMATO_FECHA)
+            except ValueError:
+                self.mostrar_mensaje("Formato de fecha incorrecto. Use YYYY-MM-DD.", RED_COLOR)
+                return
+
+            if hasta_date < desde_date:
+                self.mostrar_mensaje("La fecha 'Hasta' no puede ser menor que la fecha 'Desde'.", RED_COLOR)
+                return
+
+            self.mostrar_grafico(desde, hasta, titulo,
+                                 lambda desde, hasta: self.generar_grafico_devoluciones(desde, hasta, titulo, query, color),
+                                 lambda image_base64, desde, hasta: self.generar_pdf(image_base64, desde, hasta, titulo, orientation='landscape'))
+
+        self.page.controls.clear()
+        self.page.add(
+            ft.Text(titulo, size=24),
+            ft.Column([
+                self.crear_fila_fecha(desde_field, "Desde"),
+                self.crear_fila_fecha(hasta_field, "Hasta")
+            ]),
+            ft.ElevatedButton("Generar Gráfico", on_click=generar_grafico),
+            ft.ElevatedButton("Volver", on_click=lambda _: self.main_menu_callback())
+        )
+        self.page.update()
+
+    def crear_fila_fecha(self, campo_fecha: ft.TextField, etiqueta: str) -> ft.Row:
+        """
+        Crea una fila con un campo de fecha y un botón para abrir el calendario.
+        :param campo_fecha: El campo de texto donde se mostrará la fecha seleccionada.
+        :param etiqueta: La etiqueta que se mostrará junto al campo de fecha.
+        :return: Una fila con el campo de fecha y el botón para abrir el calendario.
+        """
+        return ft.Row([
+            campo_fecha,
+            ft.ElevatedButton(
+                "Seleccionar Fecha",
+                on_click=lambda _: self.abrir_calendario(_, campo_fecha),
+                icon=ft.icons.CALENDAR_MONTH
+            )
+        ], alignment=ft.MainAxisAlignment.CENTER)
